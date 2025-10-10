@@ -112,4 +112,3 @@ KPIs Q3 2025:
 
 ![Comparação de Agentes](comparacao_agentes.png)  
 
-*(Substitua as imagens pelos prints reais do seu Streamlit)*

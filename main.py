@@ -63,7 +63,7 @@ if st.button("💡 Executar") and prompt.strip():
                 agents = {
                     "Básico": create_basic_agent(),
                     "Com Memória": create_memory_agent(),
-                    "Com Ferramentas": create_tool_agent(),
+                    #"Com Ferramentas": create_tool_agent(),
                     "RAG": create_rag_agent()
                 }
                 outputs = {name: agent(prompt_pt) for name, agent in agents.items()}
