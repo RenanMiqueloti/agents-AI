@@ -112,3 +112,7 @@ KPIs Q3 2025:
 
 ![Comparação de Agentes](comparacao_agentes.png)  
 
+**RAG com base no data/docs**  
+
+![RAG com base no data/docs](rag_agentes.png)  
+
