@@ -1,0 +1,45 @@
+Relatório de KPIs Financeiros - Q3 2025
+
+1. Receita Total:
+   - Valor: R$ 15.200.000
+   - Crescimento trimestral: 8%
+   - Observação: aumento impulsionado por novos contratos corporativos.
+
+2. Lucro Líquido:
+   - Valor: R$ 3.450.000
+   - Margem de lucro: 22,7%
+   - Observação: redução de custos operacionais contribuiu para a margem.
+
+3. EBITDA:
+   - Valor: R$ 5.200.000
+   - Margem EBITDA: 34,2%
+   - Observação: melhora em comparação ao Q2, impulsionada por eficiência em TI.
+
+4. Retorno sobre Patrimônio (ROE):
+   - Percentual: 15,4%
+   - Observação: consistente com metas estratégicas anuais.
+
+5. Retorno sobre Ativos (ROA):
+   - Percentual: 6,2%
+   - Observação: levemente superior ao trimestre anterior.
+
+6. Índice de Endividamento:
+   - Percentual: 42%
+   - Observação: dentro do limite aceitável da política financeira.
+
+7. Número de Clientes Ativos:
+   - Quantidade: 12.450
+   - Crescimento: 5% em relação ao trimestre anterior.
+
+8. Taxa de Inadimplência:
+   - Percentual: 1,8%
+   - Observação: mantém-se baixa graças a processos de cobrança eficazes.
+
+9. Indicadores Operacionais:
+   - Custo médio por transação: R$ 2,50
+   - Tempo médio de processamento: 1,2 dias
+
+Observações gerais:
+- O desempenho do setor financeiro está dentro das expectativas estratégicas.
+- Investimentos em tecnologia e automação têm contribuído para aumento de eficiência.
+- Recomenda-se monitoramento contínuo de inadimplência e margem de lucro.

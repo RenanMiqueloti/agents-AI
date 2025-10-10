@@ -1,0 +1,16 @@
+# Streamlit para interface web
+streamlit>=1.25.0
+
+# LangChain e extensões para agentes
+langchain>=0.1.0
+langchain-community>=0.0.34
+
+# FAISS CPU para vetores (RAG)
+faiss-cpu>=1.7.4
+
+# Variáveis de ambiente
+python-dotenv>=1.0.0
+
+# Bibliotecas para manipulação de arquivos e texto
+pandas>=2.0.0
+numpy>=1.26.0
