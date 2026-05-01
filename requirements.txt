@@ -1,16 +1,22 @@
-# Streamlit para interface web
-streamlit>=1.25.0
+# Interface web
+streamlit>=1.35.0
 
-# LangChain e extensões para agentes
-langchain>=0.1.0
-langchain-community>=0.0.34
+# LangChain — núcleo e integrações (v0.3+ usa LCEL como padrão)
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-ollama>=0.2.0
 
-# FAISS CPU para vetores (RAG)
-faiss-cpu>=1.7.4
+# LangGraph para agentes com ferramentas (create_react_agent)
+langgraph>=0.2.0
+
+# Vetores locais (CPU)
+faiss-cpu>=1.8.0
 
 # Variáveis de ambiente
 python-dotenv>=1.0.0
 
-# Bibliotecas para manipulação de arquivos e texto
+# Utilitários
 pandas>=2.0.0
 numpy>=1.26.0
