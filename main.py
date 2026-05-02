@@ -1,90 +1,96 @@
+import os
+
 import streamlit as st
+from dotenv import load_dotenv
+
 from agents.basic_agent import create_basic_agent
 from agents.memory_agent import create_memory_agent
-from agents.tool_agent import create_tool_agent
+from agents.provider import Provider
 from agents.rag_agent import create_rag_agent
+from agents.tool_agent import create_tool_agent
 
-# Configuração do dashboard
+load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Página
+# ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="IA Agents",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-st.markdown("""
-# 🤖 IA Agents 
-Painel pessoal para explorar diferentes agentes de IA locais.  
-Respostas curtas, limpas e diretas, com histórico e comparação entre agentes.
-""")
+st.markdown(
+    """
+# 🤖 IA Agents
+Painel pessoal para explorar e comparar agentes de IA com diferentes providers.
+Respostas curtas, limpas e diretas — com histórico e comparação lado a lado.
+"""
+)
 
-# Inicializa histórico
+# ---------------------------------------------------------------------------
+# Sidebar — provider e tipo de agente
+# ---------------------------------------------------------------------------
+st.sidebar.header("Configuração")
+
+provider: Provider = st.sidebar.selectbox(  # type: ignore[assignment]
+    "🔌 Provider",
+    options=["ollama", "claude", "openai"],
+    help=(
+        "**ollama** — local, gratuito, requer Ollama instalado\n\n"
+        "**claude** — Anthropic API (ANTHROPIC_API_KEY no .env)\n\n"
+        "**openai** — OpenAI API (OPENAI_API_KEY no .env)"
+    ),
+)
+
+agent_type: str = st.sidebar.radio(
+    "🤖 Agente",
+    ["Básico", "Com Memória", "Com Ferramentas", "RAG (Documentos)", "Comparar Todos"],
+)
+
+# Aviso de API key ausente
+if provider == "claude" and not os.getenv("ANTHROPIC_API_KEY"):
+    st.sidebar.warning("⚠️ ANTHROPIC_API_KEY não encontrada no .env")
+elif provider == "openai" and not os.getenv("OPENAI_API_KEY"):
+    st.sidebar.warning("⚠️ OPENAI_API_KEY não encontrada no .env")
+
+# ---------------------------------------------------------------------------
+# Histórico
+# ---------------------------------------------------------------------------
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# Sidebar: escolha do agente
-agent_type = st.sidebar.radio(
-    "Selecione o agente:",
-    ["Básico", "Com Memória", "Com Ferramentas", "RAG (Documentos)", "Comparar Todos"]
-)
+# ---------------------------------------------------------------------------
+# Fábrica de agentes
+# ---------------------------------------------------------------------------
 
-# Função para criar agente
-def get_agent(agent_name):
+def get_agent(agent_name: str, prov: Provider):
+    """Instancia o agente escolhido com o provider configurado."""
     if agent_name == "Básico":
-        return create_basic_agent()
-    elif agent_name == "Com Memória":
-        return create_memory_agent()
-    elif agent_name == "Com Ferramentas":
-        return create_tool_agent()
-    elif agent_name == "RAG (Documentos)":
-        return create_rag_agent()
+        return create_basic_agent(prov)
+    if agent_name == "Com Memória":
+        return create_memory_agent(prov)
+    if agent_name == "Com Ferramentas":
+        return create_tool_agent(prov)
+    if agent_name == "RAG (Documentos)":
+        return create_rag_agent(prov)
     return None
 
-# Input do usuário
+
+# ---------------------------------------------------------------------------
+# Input e execução
+# ---------------------------------------------------------------------------
 prompt = st.text_area(
     "Digite sua pergunta ou comando:",
-    placeholder="Ex: Resuma os KPIs financeiros do último trimestre..."
+    placeholder="Ex: Resuma os KPIs financeiros do último trimestre...",
 )
 
-# Botão de execução
 if st.button("💡 Executar") and prompt.strip():
-    with st.spinner("Processando..."):
+    with st.spinner(f"Processando com **{provider}**..."):
         try:
-            # Adiciona instrução para o modelo responder em português
             prompt_pt = f"Responda em português e seja breve: {prompt}"
 
             if agent_type != "Comparar Todos":
-                agent = get_agent(agent_type)
+                agent = get_agent(agent_type, provider)
                 output = agent(prompt_pt)
-                st.session_state.history.append({"prompt": prompt, agent_type: output})
-                st.markdown(f"### Resultado ({agent_type})")
-                st.success(output)
-            else:
-                # Comparar todos os agentes
-                agents = {
-                    "Básico": create_basic_agent(),
-                    "Com Memória": create_memory_agent(),
-                    #"Com Ferramentas": create_tool_agent(),
-                    "RAG": create_rag_agent()
-                }
-                outputs = {name: agent(prompt_pt) for name, agent in agents.items()}
-                st.session_state.history.append({"prompt": prompt, **outputs})
-
-                # Mostrar resultados lado a lado
-                st.markdown("### Comparação entre agentes")
-                cols = st.columns(len(outputs))
-                for i, (name, out) in enumerate(outputs.items()):
-                    with cols[i]:
-                        st.subheader(name)
-                        st.info(out)
-        except Exception as e:
-            st.error(f"Erro ao processar: {e}")
-
-# Mostrar histórico
-if st.checkbox("📂 Ver histórico"):
-    st.markdown("## Histórico de Interações")
-    for idx, entry in enumerate(reversed(st.session_state.history), 1):
-        st.markdown(f"**{idx}. Pergunta:** {entry['prompt']}")
-        for agent_name, response in entry.items():
-            if agent_name != "prompt":
-                st.markdown(f"- **{agent_name}:** {response}")
-        st.markdown("---")
+     

@@ -1,87 +1,61 @@
-# Agents AI Dashboard
+# agents-AI
 
-Painel pessoal em Streamlit para testar e comparar agentes de IA locais. O projeto foi montado como um laboratorio pratico para explorar comportamentos diferentes de agentes usando Ollama, LangChain e documentos locais.
+Painel Streamlit para explorar e comparar agentes de IA com suporte a múltiplos providers: **Ollama** (local/gratuito), **Claude** (Anthropic) e **OpenAI**.
 
-## O que o projeto faz
+O projeto demonstra padrões de produção com LangChain 0.3+: LCEL chains, `create_react_agent` do LangGraph, RAG sem APIs deprecated e abstração de provider.
 
-- executa uma interface web local com Streamlit
-- permite alternar entre diferentes tipos de agente
-- mantem historico das interacoes na sessao
-- compara respostas de varios agentes lado a lado
-- consulta documentos locais com um fluxo simples de RAG
+![dashboard](dashboard_principal.png)
 
-## Tipos de agentes
+## Agentes disponíveis
 
-- Basico: responde perguntas gerais
-- Com memoria: reaproveita o contexto da conversa atual
-- Com ferramentas: executa operacoes simples via tools
-- RAG: consulta documentos em `data/docs/`
-- Comparar todos: mostra respostas em paralelo
+| Agente | Descrição | Padrão |
+|---|---|---|
+| Básico | Responde perguntas gerais | LCEL chain simples |
+| Com Memória | Mantém contexto da conversa | `RunnableWithMessageHistory` |
+| Com Ferramentas | Executa tools (soma, data atual) | `create_react_agent` (LangGraph) |
+| RAG | Consulta documentos em `data/docs/` | LCEL RAG chain + FAISS |
+
+## Providers suportados
+
+| Provider | Modelo | Requer |
+|---|---|---|
+| `ollama` | llama3 | [Ollama](https://ollama.ai) instalado |
+| `claude` | claude-3-5-haiku-20241022 | `ANTHROPIC_API_KEY` no `.env` |
+| `openai` | gpt-4o-mini | `OPENAI_API_KEY` no `.env` |
 
 ## Stack
 
-- Python
-- Streamlit
-- LangChain
-- Ollama
-- Llama 3
-- FAISS
+- Python 3.10+, Streamlit
+- LangChain 0.3+ (LCEL), LangGraph 0.4+ (`create_react_agent`)
+- LangChain-Anthropic / LangChain-OpenAI / LangChain-Ollama
+- FAISS (índice vetorial local)
 
-## Estrutura do repositorio
+## Estrutura
 
 ```text
 .
-|-- main.py
-|-- agents/
-|   |-- basic_agent.py
-|   |-- memory_agent.py
-|   |-- rag_agent.py
-|   `-- tool_agent.py
-|-- data/
-|   `-- docs/
-|       `-- exemplo.txt
-|-- dashboard_principal.png
-|-- comparacao_agentes.png
-|-- rag_agentes.png
-`-- requirements.txt
+├── main.py                  # dashboard Streamlit
+├── agents/
+│   ├── provider.py          # fábrica de LLMs por provider
+│   ├── basic_agent.py
+│   ├── memory_agent.py
+│   ├── tool_agent.py        # LangGraph ReAct + tools
+│   └── rag_agent.py         # LCEL RAG chain
+├── data/docs/               # coloque seus .txt aqui para o agente RAG
+└── requirements.txt
 ```
 
 ## Como executar
-
-### Pre-requisitos
-
-- Python 3.10+
-- Ollama instalado
-- um modelo local disponivel no Ollama, como `llama3`
-
-### Passos
 
 ```bash
 git clone https://github.com/RenanMiqueloti/agents-AI.git
 cd agents-AI
 python -m venv .venv
-.venv\Scripts\activate
+# Windows: .venv\Scripts\activate | Linux/Mac: source .venv/bin/activate
 pip install -r requirements.txt
-ollama pull llama3
-streamlit run main.py
 ```
 
-Depois disso, abra `http://localhost:8501`.
+Crie um `.env` com as chaves que for usar (opcional para Ollama):
 
-## Como usar
-
-1. Escolha o tipo de agente na barra lateral.
-2. Digite uma pergunta ou comando.
-3. Clique em `Executar`.
-4. Se quiser comparar abordagens, use `Comparar Todos`.
-5. Ative o historico para revisar interacoes anteriores.
-
-## Arquivos visuais
-
-- `dashboard_principal.png`
-- `comparacao_agentes.png`
-- `rag_agentes.png`
-
-## Status
-
-Projeto funcional como ambiente de estudo e experimentacao. O foco aqui e exploracao de agentes locais, nao produto final.
+```env
+ANTHROPIC_API_KEY=sk-ant-...   # para

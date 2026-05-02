@@ -1,18 +1,18 @@
-from langchain_ollama import OllamaLLM
+"""Agente básico — responde perguntas gerais sem memória nem ferramentas."""
+from agents.provider import Provider, get_llm
 
-def format_response(result):
+
+def format_response(result: object) -> str:
+    """Normaliza a saída do LLM para string curta (máx. 2 frases).
+
+    Args:
+        result: Saída bruta do LLM (AIMessage, str ou dict).
+
+    Returns:
+        Texto limpo terminado em ponto final.
+    """
+    if hasattr(result, "content"):
+        result = result.content  # type: ignore[union-attr]
     if isinstance(result, dict):
-        for key in ["response", "result"]:
+        for key in ("response", "result"):
             if key in result:
-                result = result[key]
-                break
-    result = result.replace("\n", " ").strip()
-    sentences = result.split(". ")
-    return ". ".join(sentences[:2]) + "."
-
-def create_basic_agent():
-    llm = OllamaLLM(model="llama3")  # modelo gratuito local
-    def run(prompt: str):
-        response = llm.invoke(prompt)
-        return format_response(response)
-    return run
