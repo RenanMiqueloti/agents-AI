@@ -1,0 +1,32 @@
+[
+  {
+    "id": "a001",
+    "agent": "basic",
+    "prompt": "What is the capital of France?",
+    "expected_themes": "Paris should be mentioned as the capital city."
+  },
+  {
+    "id": "a002",
+    "agent": "tool",
+    "prompt": "What is 25 * 48?",
+    "expected_themes": "The answer should be 1200."
+  },
+  {
+    "id": "a003",
+    "agent": "tool",
+    "prompt": "What is today's date?",
+    "expected_themes": "A valid ISO date string (YYYY-MM-DD) for the current day."
+  },
+  {
+    "id": "a004",
+    "agent": "memory",
+    "prompt": "My name is Renan. Remember it.",
+    "expected_themes": "The agent should acknowledge storing the name Renan."
+  },
+  {
+    "id": "a005",
+    "agent": "memory",
+    "prompt": "What is my name?",
+    "expected_themes": "The agent should recall 'Renan' from the prior turn (tests memory persistence)."
+  }
+]
