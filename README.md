@@ -1,10 +1,41 @@
 # agents-AI
 
-Painel Streamlit para explorar e comparar agentes de IA com múltiplos providers: **Ollama** (local), **Claude** (Anthropic) e **OpenAI**.
-
-Demonstra padrões de produção: LCEL chains, `create_react_agent` (LangGraph), **Human-in-the-Loop** com `interrupt()`, **servidor MCP customizado** e **evals com LLM-as-judge**.
+Referência de padrões de produção para agentes de IA: **MCP server customizado**, **LangGraph HITL**, multi-provider (Ollama / Claude / OpenAI) e **evals com LLM-as-judge** — tudo em um único repositório executável.
 
 ![dashboard](dashboard_principal.png)
+
+---
+
+## MCP Server
+
+`mcp_server.py` implementa um servidor MCP customizado com 4 ferramentas expostas via protocolo stdio — conectável ao **Claude Desktop**, **Claude Code** e qualquer cliente MCP compatível.
+
+| Ferramenta | O que faz |
+|---|---|
+| `get_current_datetime` | Data/hora UTC em ISO 8601 |
+| `calculate` | Avalia expressões matemáticas com segurança |
+| `search_knowledge` | Busca no knowledge base (stub — conecte ao seu Qdrant) |
+| `count_tokens` | Estimativa de tokens em um texto |
+
+**Para rodar o servidor:**
+```bash
+pip install -r requirements.txt
+python mcp_server.py
+```
+
+**Para conectar ao Claude Desktop**, adicione em `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "agents-ai": {
+      "command": "python",
+      "args": ["/caminho/para/mcp_server.py"]
+    }
+  }
+}
+```
+
+> Em 2026, 78% dos times enterprise têm pelo menos um agente MCP em produção. Consumir MCP é commodity — *implementar* um servidor MCP é raro.
 
 ---
 
@@ -44,37 +75,6 @@ graph TD
 | Com Ferramentas | Executa tools (soma, data atual) | `create_react_agent` (LangGraph) |
 | RAG | Consulta documentos em `data/docs/` | LCEL RAG chain + FAISS |
 | **HITL** | Pausa para aprovação em ações de alto impacto | LangGraph `interrupt()` + `MemorySaver` |
-
----
-
-## MCP Server
-
-`mcp_server.py` implementa um servidor MCP customizado que expõe 4 ferramentas:
-
-| Ferramenta | O que faz |
-|---|---|
-| `get_current_datetime` | Data/hora UTC em ISO 8601 |
-| `calculate` | Avalia expressões matemáticas com segurança |
-| `search_knowledge` | Busca no knowledge base (stub — conecte ao seu Qdrant) |
-| `count_tokens` | Estimativa de tokens em um texto |
-
-**Para rodar o servidor:**
-```bash
-pip install mcp
-python mcp_server.py
-```
-
-**Para conectar ao Claude Desktop**, adicione em `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "agents-ai": {
-      "command": "python",
-      "args": ["/caminho/para/mcp_server.py"]
-    }
-  }
-}
-```
 
 ---
 
@@ -170,4 +170,3 @@ LangGraph venceu CrewAI em stars do GitHub em early 2026 por uma razão concreta
 Consumir MCP é commodity (78% das enterprises já têm agentes MCP em produção). *Implementar* um servidor MCP é raro. Este projeto demonstra os dois lados do protocolo.
 
 **Por que FAISS no agente RAG e não Qdrant?**
-FAISS é suficiente para demonstração local sem servidor extra. Para produção com filtros e escala horizontal, troque por Qdrant (ver `rag-chatbot` que já usa Qdrant in-memory).

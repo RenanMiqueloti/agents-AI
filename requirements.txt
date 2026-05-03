@@ -18,9 +18,8 @@ langgraph>=0.4.0
 # Vetores locais (RAG agent)
 faiss-cpu>=1.8.0
 
-# MCP server (opcional — para mcp_server.py)
-# pip install mcp
-# mcp>=1.0.0
+# MCP server — protocolo universal de integração de agentes (2026)
+mcp>=1.0.0
 
 # Variáveis de ambiente
 python-dotenv>=1.0.0
