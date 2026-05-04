@@ -170,3 +170,4 @@ LangGraph venceu CrewAI em stars do GitHub em early 2026 por uma razão concreta
 Consumir MCP é commodity (78% das enterprises já têm agentes MCP em produção). *Implementar* um servidor MCP é raro. Este projeto demonstra os dois lados do protocolo.
 
 **Por que FAISS no agente RAG e não Qdrant?**
+FAISS é embeddable (zero serviço externo) e suficiente para o caso de uso aqui: corpus estático em `data/docs/`, indexação em memória no startup, sem filtros nem escala horizontal. Mantém o quick-start em um único `pip install`. Quando o caso exige corpus dinâmico, retrieval híbrido e produção, o projeto irmão [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) usa Qdrant — separação intencional entre os dois repositórios.
