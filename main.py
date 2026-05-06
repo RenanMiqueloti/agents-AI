@@ -1,4 +1,5 @@
 """Dashboard Streamlit — IA Agents com múltiplos providers e padrões de produção."""
+
 import os
 
 import streamlit as st
@@ -272,13 +273,13 @@ else:
                         ("Com Ferramentas", create_tool_agent(provider)),
                         ("RAG (Documentos)", create_rag_agent(provider)),
                     ]
-                    for col, (name, ag) in zip(cols, agents_to_compare):
+                    for col, (name, ag) in zip(cols, agents_to_compare, strict=True):
                         with col:
                             st.markdown(f"**{name}**")
                             result = ag(prompt_pt)
                             st.write(result)
 
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 st.error(f"Erro: {exc}")
 
     # Histórico de mensagens

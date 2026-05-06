@@ -10,6 +10,7 @@ Requisitos:
     ANTHROPIC_API_KEY ou OPENAI_API_KEY no .env (para o agente avaliado)
     OPENAI_API_KEY (para o juiz LLM)
 """
+
 from __future__ import annotations
 
 import json
@@ -89,8 +90,8 @@ def run_evals(provider: str = "openai") -> list[dict]:
 
     agents_map = {
         "basic": create_basic_agent(provider),  # type: ignore[arg-type]
-        "tool": create_tool_agent(provider),    # type: ignore[arg-type]
-        "memory": create_memory_agent(provider), # type: ignore[arg-type]
+        "tool": create_tool_agent(provider),  # type: ignore[arg-type]
+        "memory": create_memory_agent(provider),  # type: ignore[arg-type]
     }
 
     dataset = load_dataset()
@@ -106,7 +107,7 @@ def run_evals(provider: str = "openai") -> list[dict]:
 
         try:
             answer = agent_fn(sample["prompt"])
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             answer = f"ERROR: {exc}"
 
         scores = llm_as_judge(sample["prompt"], answer, sample.get("expected_themes"))

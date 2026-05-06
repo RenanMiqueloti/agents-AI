@@ -1,5 +1,9 @@
 # agents-AI
 
+![CI](https://github.com/RenanMiqueloti/agents-AI/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+
 Referência de padrões de produção para agentes de IA: **MCP server customizado**, **LangGraph HITL**, multi-provider (Ollama / Claude / OpenAI) e **evals com LLM-as-judge** — tudo em um único repositório executável.
 
 ![dashboard](dashboard_principal.png)

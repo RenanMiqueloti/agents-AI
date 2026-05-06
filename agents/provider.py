@@ -10,6 +10,7 @@ Usage::
     from agents.provider import get_llm
     llm = get_llm("claude")
 """
+
 import os
 from typing import Literal
 
@@ -35,10 +36,12 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
     """
     if provider == "ollama":
         from langchain_ollama import ChatOllama  # type: ignore[import]
+
         return ChatOllama(model=_OLLAMA_MODEL, temperature=temperature)
 
     if provider == "claude":
         from langchain_anthropic import ChatAnthropic  # type: ignore[import]
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError(
@@ -53,11 +56,11 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
 
     if provider == "openai":
         from langchain_openai import ChatOpenAI  # type: ignore[import]
+
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError(
-                "OPENAI_API_KEY não encontrada. "
-                "Crie um arquivo .env com OPENAI_API_KEY=sk-..."
+                "OPENAI_API_KEY não encontrada. Crie um arquivo .env com OPENAI_API_KEY=sk-..."
             )
         return ChatOpenAI(
             model=_OPENAI_MODEL,
@@ -65,7 +68,4 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
             api_key=api_key,
         )
 
-    raise ValueError(
-        f"Provider desconhecido: {provider!r}. "
-        "Use 'ollama', 'claude' ou 'openai'."
-    )
+    raise ValueError(f"Provider desconhecido: {provider!r}. Use 'ollama', 'claude' ou 'openai'.")
