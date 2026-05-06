@@ -23,12 +23,13 @@ Dependência:
 
 Referência: https://modelcontextprotocol.io/docs/concepts/servers
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 try:
     from mcp import types
@@ -117,15 +118,13 @@ if _MCP_AVAILABLE:
     # ── Tool implementations ──────────────────────────────────────────────
 
     @server.call_tool()
-    async def call_tool(
-        name: str, arguments: dict
-    ) -> list[types.TextContent]:
+    async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 
         if name == "get_current_datetime":
             return [
                 types.TextContent(
                     type="text",
-                    text=datetime.now(tz=timezone.utc).isoformat(),
+                    text=datetime.now(tz=UTC).isoformat(),
                 )
             ]
 
@@ -135,9 +134,9 @@ if _MCP_AVAILABLE:
             safe_ns = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
             safe_ns.update({"abs": abs, "round": round, "min": min, "max": max})
             try:
-                result = eval(expression, {"__builtins__": {}}, safe_ns)  # noqa: S307
+                result = eval(expression, {"__builtins__": {}}, safe_ns)
                 return [types.TextContent(type="text", text=str(result))]
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 return [types.TextContent(type="text", text=f"Error: {exc}")]
 
         if name == "search_knowledge":
@@ -151,7 +150,7 @@ if _MCP_AVAILABLE:
             stub = [
                 {
                     "rank": i + 1,
-                    "text": f"[Placeholder result {i+1} for '{query}'] "
+                    "text": f"[Placeholder result {i + 1} for '{query}'] "
                     "Replace this stub with a real Qdrant query.",
                     "score": round(0.95 - i * 0.1, 2),
                 }

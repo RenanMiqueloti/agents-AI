@@ -1,0 +1,53 @@
+[project]
+name = "agents-ai"
+version = "0.1.0"
+description = "Agentes LangGraph com HITL via interrupt(), MCP server custom e evals LLM-as-judge — multi-provider (Claude, OpenAI, Ollama)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Renan Miqueloti", email = "renanmiqueloti@gmail.com" }]
+keywords = ["langgraph", "langchain", "mcp", "agents", "llm", "hitl", "evals"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/RenanMiqueloti/agents-AI"
+Issues = "https://github.com/RenanMiqueloti/agents-AI/issues"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["agents*", "evals*"]
+exclude = ["tests*", "data*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+# Same rationale as the other repos: pt-BR copy uses en-dash in docstrings
+# and string literals (e.g. "1–5 integer scale" in eval prompts).
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-ra --strict-markers"
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+ignore_missing_imports = true
