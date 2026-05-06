@@ -1,15 +1,20 @@
 """Agente RAG usando LCEL chain — sem RetrievalQA deprecated.
 
-Substitui RetrievalQA.from_chain_type + langchain.vectorstores pelo padrão atual:
-LCEL chain (retrieve → prompt → llm → parse) com langchain_community.vectorstores.
+Pipeline: carregar docs → chunkar → embedar → indexar (FAISS) → retriever
+top-3 → prompt → LLM → ``StrOutputParser``.
 
-Embeddings: sempre via Ollama (llama3) — independente do provider do chat model.
-Chat model: configurável via ``agents.provider.get_llm`` (ollama / claude / openai).
+Embeddings: sempre via Ollama (gratuito, sem API). Chat model: configurável
+via :func:`agents.provider.get_llm` (ollama / claude / openai).
 """
+
+from __future__ import annotations
+
 import os
+from collections.abc import Callable
 
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -18,17 +23,14 @@ from langchain_text_splitters import CharacterTextSplitter
 
 from agents.provider import Provider, get_llm
 
+_EMBEDDING_MODEL = "llama3"
 
-def format_response(text: str) -> str:
-    """Limpa e trunca a resposta para no máximo 2 frases.
 
-    Args:
-        text: Texto bruto retornado pelo modelo.
-
-    Returns:
-        Resposta formatada com ponto final garantido.
-    """
-    text = text.replace("\n", " ").strip()
+def format_response(result: object) -> str:
+    """Limpa e trunca a resposta para no máximo 2 frases."""
+    if hasattr(result, "content"):
+        result = result.content  # type: ignore[union-attr]
+    text = str(result).replace("\n", " ").strip()
     sentences = text.split(". ")
     short = ". ".join(sentences[:2]).strip()
     if not short.endswith("."):
@@ -36,7 +38,54 @@ def format_response(text: str) -> str:
     return short
 
 
-def _load_docs(docs_dir: str = "data/docs") -> list:
+def _load_docs(docs_dir: str = "data/docs") -> list[Document]:
     """Carrega todos os arquivos .txt do diretório informado.
 
-    A
+    Raises:
+        FileNotFoundError: Se o diretório não existir.
+    """
+    if not os.path.isdir(docs_dir):
+        raise FileNotFoundError(f"Diretório de documentos não encontrado: {docs_dir!r}")
+    docs: list[Document] = []
+    for fname in os.listdir(docs_dir):
+        if fname.endswith(".txt"):
+            loader = TextLoader(os.path.join(docs_dir, fname), encoding="utf-8")
+            docs.extend(loader.load())
+    return docs
+
+
+def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
+    """Constrói o agente RAG com retriever FAISS e o LLM do provider escolhido.
+
+    Args:
+        provider: ``"ollama"``, ``"claude"`` ou ``"openai"`` para o chat
+            model. Os embeddings sempre usam Ollama.
+
+    Returns:
+        Callable que recebe uma pergunta e devolve a resposta formatada.
+    """
+    docs = _load_docs()
+    splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    chunks = splitter.split_documents(docs)
+
+    embeddings = OllamaEmbeddings(model=_EMBEDDING_MODEL)
+    db = FAISS.from_documents(chunks, embeddings)
+    retriever = db.as_retriever(search_kwargs={"k": 3})
+
+    prompt = ChatPromptTemplate.from_template(
+        "Contexto:\n{context}\n\n"
+        "Pergunta: {question}\n\n"
+        "Responda em português, de forma breve e direta, usando apenas o contexto acima. "
+        "Se a resposta não estiver no contexto, diga que não sabe."
+    )
+    llm = get_llm(provider)
+
+    rag_chain = (
+        {"context": retriever, "question": RunnablePassthrough()} | prompt | llm | StrOutputParser()
+    )
+
+    def run(prompt_text: str) -> str:
+        response = rag_chain.invoke(prompt_text)
+        return format_response(response)
+
+    return run
