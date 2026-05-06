@@ -10,6 +10,7 @@ Padrão demonstrado: LangGraph interrupt() + Command(resume=...) + MemorySaver.
 Referência: LangGraph Docs — Human-in-the-loop
 https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/
 """
+
 from __future__ import annotations
 
 from typing import Annotated, TypedDict
@@ -23,7 +24,6 @@ from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
 
 from agents.provider import Provider, get_llm
-
 
 # ── Ferramentas de alto impacto (requerem aprovação) ─────────────────────
 
@@ -101,8 +101,7 @@ def human_review_node(state: HITLState):
     """
     last = state["messages"][-1]
     tool_calls_info = [
-        {"name": tc["name"], "args": tc["args"]}
-        for tc in getattr(last, "tool_calls", [])
+        {"name": tc["name"], "args": tc["args"]} for tc in getattr(last, "tool_calls", [])
     ]
 
     # ── PAUSA — o grafo aguarda aqui até Command(resume=...) ──────────────
@@ -119,9 +118,7 @@ def human_review_node(state: HITLState):
 
     return Command(
         goto=END,
-        update={
-            "messages": [AIMessage(content="🚫 Ação cancelada pelo usuário.")]
-        },
+        update={"messages": [AIMessage(content="🚫 Ação cancelada pelo usuário.")]},
     )
 
 
@@ -168,7 +165,7 @@ def run_hitl_demo(provider: Provider = "ollama") -> None:
         "Send an email to admin@example.com with subject 'Weekly Report' "
         "and body 'All systems nominal.'"
     )
-    print(f"🔒 HITL Agent — requer aprovação para ações de alto impacto")
+    print("🔒 HITL Agent — requer aprovação para ações de alto impacto")
     print(f"\n> {prompt}\n")
 
     # Primeira execução — o agente vai pausar no interrupt()
