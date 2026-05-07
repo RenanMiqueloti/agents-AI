@@ -1,9 +1,9 @@
 """Fábrica de LLMs por provider.
 
 Suporta três providers:
-- ``ollama``  — modelo local via Ollama (gratuito, sem API key)
-- ``claude``  — Claude 3.5 Haiku via Anthropic API (requer ANTHROPIC_API_KEY)
-- ``openai``  — GPT-4o-mini via OpenAI API (requer OPENAI_API_KEY)
+- ``ollama``  — qwen3:8b local via Ollama (gratuito, sem API key)
+- ``claude``  — Claude Haiku 4.5 via Anthropic API (requer ANTHROPIC_API_KEY)
+- ``openai``  — GPT-5 mini via OpenAI API (requer OPENAI_API_KEY)
 
 Usage::
 
@@ -16,9 +16,9 @@ from typing import Literal
 
 Provider = Literal["ollama", "claude", "openai"]
 
-_OLLAMA_MODEL = "llama3"
-_CLAUDE_MODEL = "claude-3-5-haiku-20241022"
-_OPENAI_MODEL = "gpt-4o-mini"
+_OLLAMA_MODEL = "qwen3:8b"
+_CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+_OPENAI_MODEL = "gpt-5-mini"
 
 
 def get_llm(provider: Provider = "ollama", temperature: float = 0.0):

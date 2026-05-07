@@ -84,11 +84,13 @@ graph TD
 
 ## Providers suportados
 
-| Provider | Modelo | Requer |
+| Provider | Modelo padrão | Requer |
 |---|---|---|
-| `ollama` | llama3 | [Ollama](https://ollama.ai) instalado |
-| `claude` | claude-3-5-haiku-20241022 | `ANTHROPIC_API_KEY` no `.env` |
-| `openai` | gpt-4o-mini | `OPENAI_API_KEY` no `.env` |
+| `ollama` | `qwen3:8b` | [Ollama](https://ollama.ai) instalado |
+| `claude` | `claude-haiku-4-5-20251001` | `ANTHROPIC_API_KEY` no `.env` |
+| `openai` | `gpt-5-mini` | `OPENAI_API_KEY` no `.env` |
+
+> Defaults escolhidos para 2026: Haiku 4.5 (rápido e barato na família Claude 4.x), GPT-5 mini (mid-tier OpenAI com tool-calling estável), Qwen3 8B (melhor tool-calling open-weight em 8B segundo benchmarks 2026, roda em laptop com 8 GB RAM). Trocar é uma constante em [`agents/provider.py`](agents/provider.py).
 
 ---
 
@@ -134,7 +136,7 @@ OPENAI_API_KEY=sk-...
 
 ```bash
 # Ollama: garanta que o modelo está disponível
-ollama pull llama3
+ollama pull qwen3:8b
 
 # Painel Streamlit
 streamlit run main.py

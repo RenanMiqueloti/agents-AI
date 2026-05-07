@@ -43,7 +43,7 @@ def llm_as_judge(prompt: str, answer: str, expected: str | None = None) -> dict:
     Returns:
         Dict com scores de correctness, helpfulness, conciseness e reasoning.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm = ChatOpenAI(model="gpt-5-mini", temperature=0)
     expected_section = f"\nExpected: {expected}" if expected else ""
 
     judge_prompt = f"""You are an expert evaluator of AI agent responses.
