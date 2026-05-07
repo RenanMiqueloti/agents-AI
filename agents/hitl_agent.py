@@ -24,7 +24,7 @@ from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
 
-from agents.provider import Provider, get_llm
+from agents.provider import Provider, callbacks_config, get_llm
 
 # ── Schemas Pydantic para os args das ferramentas ────────────────────────
 
@@ -170,6 +170,8 @@ def create_hitl_agent(
 def run_hitl_demo(provider: Provider = "ollama") -> None:
     """Demo interativo do agente HITL no terminal."""
     agent, config = create_hitl_agent(provider)
+    # Tracing Langfuse cobre execução inicial + resume; sem keys, fica como no-op.
+    config = {**config, **callbacks_config()}
 
     prompt = (
         "Send an email to admin@example.com with subject 'Weekly Report' "
