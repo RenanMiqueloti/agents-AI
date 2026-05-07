@@ -306,7 +306,10 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 │   └── dataset.json              # 25 samples cobrindo todos os agentes
 ├── tests/test_smoke.py           # Smoke tests (AST-parse + factory imports)
 ├── data/docs/                    # Coloque seus .txt aqui para RAG agent + search_knowledge
-├── .github/workflows/ci.yml      # CI: ruff lint + format + pytest
+├── docs/adr/                     # Architecture Decision Records (formato Nygard)
+├── .github/
+│   ├── workflows/ci.yml          # CI: ruff lint + format + pytest
+│   └── dependabot.yml            # Bumps automáticos (pip · actions · docker)
 ├── Dockerfile                    # Multi-stage, roda Streamlit no runtime slim
 ├── docker-compose.yml            # app + serviço ollama opt-in via --profile ollama
 ├── .dockerignore
