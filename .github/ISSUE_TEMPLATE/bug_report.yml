@@ -1,0 +1,67 @@
+name: Bug report
+description: Reportar um comportamento inesperado em algum agente, no servidor MCP, na API ou no painel Streamlit.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar. Quanto mais contexto, mais rápido a investigação.
+
+  - type: input
+    id: component
+    attributes:
+      label: Componente afetado
+      description: Qual agente ou módulo? (ex.: `agents/hitl_agent.py`, `api/server.py`, `mcp_server.py`)
+      placeholder: agents/rag_agent.py
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: O que aconteceu?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que era esperado?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1. Rodar `streamlit run main.py`
+        2. Selecionar provider X
+        3. Enviar prompt Y
+        4. Observar Z
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Provider usado
+      description: ollama, claude ou openai (se aplicável)
+    validations:
+      required: false
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Versão do Python
+      placeholder: "3.12.3"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell
+    validations:
+      required: false
