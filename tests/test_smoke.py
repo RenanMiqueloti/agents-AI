@@ -165,3 +165,71 @@ def test_tool_agent_soma_rejects_missing_args() -> None:
 
     with pytest.raises(Exception):  # noqa: B017
         soma.invoke({"a": 3})
+
+
+def test_build_langfuse_callback_returns_none_without_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No LANGFUSE_* env vars => no handler is built."""
+    monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+    monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+
+    from agents.provider import _build_langfuse_callback
+
+    assert _build_langfuse_callback() is None
+
+
+def test_callbacks_config_empty_without_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """callbacks_config() must be a no-op when the env vars aren't set."""
+    monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+    monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+
+    from agents.provider import callbacks_config
+
+    assert callbacks_config() == {}
+
+
+def test_callbacks_config_wraps_handler_when_present(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When the Langfuse builder yields a handler, callbacks_config wraps it."""
+    from unittest.mock import sentinel
+
+    import agents.provider as provider_mod
+
+    monkeypatch.setattr(provider_mod, "_build_langfuse_callback", lambda: sentinel.handler)
+
+    config = provider_mod.callbacks_config()
+    assert config == {"callbacks": [sentinel.handler]}
+
+
+def test_api_health_endpoint() -> None:
+    """``GET /health`` responds 200 with the canonical ``{"status": "ok"}`` body."""
+    pytest.importorskip("fastapi")
+    pytest.importorskip("langgraph")
+
+    from fastapi.testclient import TestClient
+
+    from api.server import app
+
+    client = TestClient(app)
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_api_unknown_agent_returns_validation_error() -> None:
+    """An invalid agent name in the path must trigger FastAPI's 422 (not a 500)."""
+    pytest.importorskip("fastapi")
+    pytest.importorskip("langgraph")
+
+    from fastapi.testclient import TestClient
+
+    from api.server import app
+
+    client = TestClient(app)
+    response = client.post(
+        "/agent/nonexistent",
+        json={"prompt": "irrelevante", "provider": "openai"},
+    )
+    # FastAPI validates the AgentName Literal/Enum and returns 422 before our handler runs.
+    assert response.status_code == 422
