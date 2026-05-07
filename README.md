@@ -304,12 +304,16 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 ├── evals/
 │   ├── evaluate.py               # Harness LLM-as-judge + adapters HITL approve/reject/safe
 │   └── dataset.json              # 25 samples cobrindo todos os agentes
-├── tests/test_smoke.py           # Smoke tests (AST-parse + factory imports)
+├── tests/test_smoke.py           # Smoke + unit tests (callbacks_config, /health, parsing)
 ├── data/docs/                    # Coloque seus .txt aqui para RAG agent + search_knowledge
 ├── docs/adr/                     # Architecture Decision Records (formato Nygard)
 ├── .github/
-│   ├── workflows/ci.yml          # CI: ruff lint + format + pytest
+│   ├── workflows/ci.yml          # CI: ruff lint + format + pytest + coverage XML artifact
+│   ├── ISSUE_TEMPLATE/           # Bug report + feature request (forms YAML)
+│   ├── PULL_REQUEST_TEMPLATE.md  # What / Why / How to test + checklist
 │   └── dependabot.yml            # Bumps automáticos (pip · actions · docker)
+├── CHANGELOG.md                  # Histórico de versões (Keep a Changelog)
+├── CONTRIBUTING.md               # Guia de contribuição
 ├── Dockerfile                    # Multi-stage, roda Streamlit no runtime slim
 ├── docker-compose.yml            # app + serviço ollama opt-in via --profile ollama
 ├── .dockerignore
@@ -317,3 +321,9 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 ├── requirements.txt
 └── LICENSE
 ```
+
+---
+
+## Contribuir
+
+Histórico de versões em [`CHANGELOG.md`](CHANGELOG.md). Setup local, padrões de commit/PR e code style em [`CONTRIBUTING.md`](CONTRIBUTING.md). Mudanças de design (framework, protocolo, vector store) acompanham um ADR em [`docs/adr/`](docs/adr/).
