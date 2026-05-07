@@ -6,7 +6,7 @@
 ![LangGraph](https://img.shields.io/badge/LangGraph-0.4+-276749.svg)
 ![MCP](https://img.shields.io/badge/MCP-server-2b6cb0.svg)
 
-Referência de padrões de produção para agentes de IA: **MCP server customizado**, **LangGraph HITL**, multi-provider (Ollama / Claude / OpenAI) e **evals com LLM-as-judge** — tudo em um único repositório executável.
+Painel Streamlit multi-agente com LangGraph 0.4+, HITL via `interrupt()` + `MemorySaver`, servidor MCP customizado e harness de evals com LLM-as-judge. Providers: Ollama, Claude e OpenAI.
 
 ![dashboard](dashboard_principal.png)
 
@@ -14,40 +14,80 @@ Referência de padrões de produção para agentes de IA: **MCP server customiza
 
 ---
 
-## MCP Server
+## Visão geral
 
-`mcp_server.py` implementa um servidor MCP customizado com 4 ferramentas expostas via protocolo stdio — conectável ao **Claude Desktop**, **Claude Code** e qualquer cliente MCP compatível.
+- **5 agentes** num único painel: básico, com memória, com ferramentas, RAG e HITL.
+- **HITL real** — `interrupt()` pausa o grafo, `MemorySaver` serializa o estado, `Command(resume=...)` retoma do ponto exato.
+- **Servidor MCP** próprio em [`mcp_server.py`](mcp_server.py): 4 ferramentas via stdio, conectável a Claude Desktop, Claude Code ou qualquer cliente MCP.
+- **25 evals** com LLM-as-judge cobrindo todos os agentes, incluindo as três rotas do HITL (approve / reject / safe).
+- **Tracing opt-in** via Langfuse — três variáveis de ambiente, sem alterar código.
 
-| Ferramenta | O que faz |
-|---|---|
-| `get_current_datetime` | Data/hora UTC em ISO 8601 |
-| `calculate` | Avalia expressões matemáticas com segurança |
-| `search_knowledge` | Busca no knowledge base (stub — conecte ao seu Qdrant) |
-| `count_tokens` | Estimativa de tokens em um texto |
+```mermaid
+flowchart LR
+    User((User))
 
-**Para rodar o servidor:**
-```bash
-pip install -r requirements.txt
-python mcp_server.py
+    subgraph Repo["agents-AI"]
+      UI["main.py<br/>Streamlit panel"]
+      Agents["agents/<br/>basic · memory · tool · rag · hitl"]
+      Provider["provider.py<br/>get_llm + callbacks_config"]
+      Evals["evals/<br/>25 samples + LLM-as-judge"]
+      MCP["mcp_server.py<br/>stdio · 4 tools"]
+    end
+
+    User --> UI --> Agents --> Provider
+    Evals -. avalia .-> Agents
+
+    Provider -->|OLLAMA| Ollama[(Ollama local<br/>qwen3:8b)]
+    Provider -->|CLAUDE| Anthropic[(Anthropic<br/>Haiku 4.5)]
+    Provider -->|OPENAI| OpenAI[(OpenAI<br/>gpt-5-mini)]
+    Provider -. opt-in .-> Langfuse[(Langfuse<br/>tracing)]
+
+    MCP -. protocolo MCP .-> Clients(("Claude Desktop<br/>Claude Code<br/>etc."))
+
+    classDef external fill:#0b3d2e,stroke:#1f6f54,color:#e6fff5;
+    classDef optional fill:#2a2a40,stroke:#5a5a80,color:#cfcfff,stroke-dasharray:3 3;
+    class Ollama,Anthropic,OpenAI external;
+    class Langfuse,Clients optional;
 ```
 
-**Para conectar ao Claude Desktop**, adicione em `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "agents-ai": {
-      "command": "python",
-      "args": ["/caminho/para/mcp_server.py"]
-    }
-  }
-}
-```
-
-> Em 2026, 78% dos times enterprise têm pelo menos um agente MCP em produção. Consumir MCP é commodity — *implementar* um servidor MCP é raro.
+> O painel chama os agentes, que delegam ao `provider` pra falar com o LLM escolhido. O harness de evals roda os mesmos agentes em batch. Linhas tracejadas (Langfuse, clientes MCP externos) são integrações opt-in.
 
 ---
 
-## Arquitetura do agente com ferramentas (LangGraph)
+## Quick start
+
+```bash
+git clone https://github.com/RenanMiqueloti/agents-AI.git
+cd agents-AI
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Copie [`.env.example`](.env.example) para `.env` e preencha as keys dos providers que for usar:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+```
+
+Para rodar com Ollama localmente:
+
+```bash
+ollama pull qwen3:8b           # chat model
+ollama pull nomic-embed-text   # embeddings do agente RAG
+```
+
+Comandos principais:
+
+```bash
+streamlit run main.py            # painel multi-agente
+python -m agents.hitl_agent      # demo HITL no terminal
+python -m evals.evaluate         # roda os 25 evals (juiz: gpt-5-mini)
+```
+
+---
+
+## Arquitetura HITL
 
 ```mermaid
 graph TD
@@ -67,30 +107,62 @@ graph TD
 
 | Componente | Responsabilidade |
 |---|---|
-| **agent** | Invoca LLM com ferramentas vinculadas (LCEL + bind_tools) |
-| **router** | Verifica se o tool call é de alto impacto |
-| **human_review** | `interrupt()` — pausa, aguarda aprovação, retoma via `Command(resume=...)` |
-| **tools** | `ToolNode` — executa a ferramenta e retorna o resultado ao agente |
+| **agent** | Invoca o LLM com ferramentas vinculadas (`bind_tools`) |
+| **router** | Decide se o tool call requer aprovação humana |
+| **human_review** | `interrupt()` — pausa, aguarda decisão, retoma via `Command(resume=...)` |
+| **tools** | `ToolNode` — executa a ferramenta e devolve o resultado ao agente |
+
+Implementação em [`agents/hitl_agent.py`](agents/hitl_agent.py); UI integrada em [`main.py`](main.py).
 
 ---
 
-## Agentes disponíveis
+## Agentes
 
 | Agente | Descrição | Padrão |
 |---|---|---|
 | Básico | Responde perguntas gerais | LCEL chain simples |
 | Com Memória | Mantém contexto da conversa | `RunnableWithMessageHistory` |
-| Com Ferramentas | Executa tools (soma, data atual) | `create_react_agent` (LangGraph) |
+| Com Ferramentas | Executa tools (`soma`, `data_hoje`) | `create_react_agent` (LangGraph) |
 | RAG | Consulta documentos em `data/docs/` | LCEL RAG chain + FAISS |
 | **HITL** | Pausa para aprovação em ações de alto impacto | LangGraph `interrupt()` + `MemorySaver` |
 
 ![Comparação de agentes lado a lado](comparacao_agentes.png)
 
-> Modo "Comparar Todos" do painel: três agentes respondendo à mesma pergunta em paralelo — útil para demonstrar diferença de comportamento entre LCEL puro, memória e RAG sem trocar de tela.
+> Modo "Comparar Todos" do painel: três agentes respondendo à mesma pergunta em paralelo — útil para mostrar diferença de comportamento entre LCEL puro, memória e RAG.
 
 ---
 
-## Providers suportados
+## Servidor MCP
+
+[`mcp_server.py`](mcp_server.py) implementa um servidor MCP com 4 ferramentas via stdio. Conecta a qualquer cliente compatível — Claude Desktop, Claude Code ou um agente LangGraph com `MultiServerMCPClient`.
+
+| Ferramenta | O que faz |
+|---|---|
+| `get_current_datetime` | Data/hora UTC em ISO 8601 |
+| `calculate` | Avalia expressões matemáticas com namespace restrito |
+| `search_knowledge` | Busca no knowledge base (stub — pluggable a Qdrant ou pgvector) |
+| `count_tokens` | Estimativa de tokens em um texto |
+
+```bash
+python mcp_server.py
+```
+
+Para conectar ao Claude Desktop, edite `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "agents-ai": {
+      "command": "python",
+      "args": ["/caminho/absoluto/para/mcp_server.py"]
+    }
+  }
+}
+```
+
+---
+
+## Providers
 
 | Provider | Modelo padrão | Requer |
 |---|---|---|
@@ -98,7 +170,86 @@ graph TD
 | `claude` | `claude-haiku-4-5-20251001` | `ANTHROPIC_API_KEY` no `.env` |
 | `openai` | `gpt-5-mini` | `OPENAI_API_KEY` no `.env` |
 
-> Defaults escolhidos para 2026: Haiku 4.5 (rápido e barato na família Claude 4.x), GPT-5 mini (mid-tier OpenAI com tool-calling estável), Qwen3 8B (melhor tool-calling open-weight em 8B segundo benchmarks 2026, roda em laptop com 8 GB RAM). Trocar é uma constante em [`agents/provider.py`](agents/provider.py).
+Os defaults estão em três constantes no topo de [`agents/provider.py`](agents/provider.py) — trocar é uma linha. O agente RAG usa Ollama (`nomic-embed-text`) para embeddings independentemente do chat model escolhido.
+
+---
+
+## Evals
+
+[`evals/evaluate.py`](evals/evaluate.py) é um harness LLM-as-judge que executa os 25 samples de [`evals/dataset.json`](evals/dataset.json) e pontua cada resposta em três dimensões:
+
+| Dimensão | O que mede |
+|---|---|
+| `correctness` | A resposta é factualmente correta? |
+| `helpfulness` | A resposta efetivamente ajuda quem perguntou? |
+| `conciseness` | É breve sem perder informação relevante? |
+
+```bash
+python -m evals.evaluate    # provider default: openai; juiz: gpt-5-mini
+```
+
+O resumo é impresso no stdout; o JSON completo (prompt, answer e scores por sample) é salvo em `evals/results.json` para rastreamento de regressão.
+
+Cobertura HITL: três rotas simuladas pelo evaluator com `thread_id` único por sample — `hitl_approve`, `hitl_reject` e `hitl_safe` (esta última marca falha se um `interrupt()` for disparado indevidamente).
+
+---
+
+## Observability — Langfuse (opt-in)
+
+Para tracing por execução (spans, custos, tokens, latência por nó do grafo), defina três variáveis no `.env`:
+
+```env
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com   # opcional (default: cloud Langfuse)
+```
+
+Sem essas keys, os agentes funcionam idênticos. Com elas, todo `runnable.invoke(..., config=callbacks_config())` envia spans ao seu projeto Langfuse — instrumentado em `basic`, `memory`, `tool` e `rag`. O agente `hitl` ainda não está instrumentado por default (streaming + `interrupt()` exigem hook manual); o ponto de extensão é o helper [`callbacks_config`](agents/provider.py).
+
+[Free tier do Langfuse →](https://langfuse.com)
+
+---
+
+## Deploy live (Hugging Face Spaces)
+
+O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingface.co/spaces) sem GPU — setup em ~5 min:
+
+1. Crie um Space em [huggingface.co/new-space](https://huggingface.co/new-space) → SDK **Streamlit** → visibilidade **Public**.
+2. No `README.md` do Space, cole o frontmatter:
+   ```yaml
+   ---
+   title: agents-AI
+   emoji: 🔌
+   colorFrom: blue
+   colorTo: indigo
+   sdk: streamlit
+   sdk_version: 1.35.0
+   app_file: main.py
+   pinned: false
+   license: mit
+   ---
+   ```
+3. Faça push deste repo para o remote do Space, ou ative **Sync from GitHub** na UI.
+4. Em **Settings → Variables and secrets**, adicione `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` e opcionalmente `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`.
+5. Aguarde o build (~3-5 min). O Space fica em `huggingface.co/spaces/{seu-user}/agents-AI`.
+
+> **Limitação:** Ollama não roda em Spaces free — selecione `claude` ou `openai` na sidebar quando estiver hospedado. A versão local com `streamlit run main.py` continua suportando os três providers.
+
+---
+
+## Design decisions
+
+**LangGraph em vez de CrewAI.** Reducer-based state management: cada nó declara explicitamente como atualiza o estado, e conflitos em execuções paralelas resolvem de forma determinística. CrewAI abstrai esse comportamento em alto nível — confortável em protótipos, fraco quando o requisito inclui audit trail e replay.
+
+**`interrupt()` em vez de polling.** O `interrupt()` serializa o estado completo do grafo via checkpointer (`MemorySaver` em memória, `PostgresSaver` em produção) e retoma do ponto exato da pausa. Polling exigiria estado externo e re-execução parcial do grafo a cada checagem.
+
+**MCP server, e não só client.** Conectar um agente a um servidor MCP existente é o caminho comum; implementar o servidor (onde a integração customizada de fato vive) é menos coberto. Este repo cobre os dois lados — `mcp_server.py` expõe ferramentas via stdio e os agentes consomem MCP via LangGraph.
+
+**FAISS no RAG, e não Qdrant.** FAISS é embeddable (sem serviço externo) e suficiente para o caso aqui: corpus estático em `data/docs/`, índice em memória no startup, sem filtros nem escala horizontal. Mantém o quick-start em um único `pip install`. Quando o requisito inclui corpus dinâmico, retrieval híbrido e produção, o projeto irmão [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) usa Qdrant — a separação entre os dois repositórios é intencional.
+
+![Agente RAG respondendo grounded](rag_agentes.png)
+
+> O agente RAG extrai um número específico do `data/docs/exemplo.txt` — resposta ancorada no contexto recuperado, não inventada pelo LLM.
 
 ---
 
@@ -106,8 +257,8 @@ graph TD
 
 ```text
 .
-├── main.py                       # Dashboard Streamlit (UI multi-agente, fluxo HITL)
-├── mcp_server.py                 # Servidor MCP customizado (stdio transport, 4 tools)
+├── main.py                       # Painel Streamlit (UI multi-agente, fluxo HITL)
+├── mcp_server.py                 # Servidor MCP customizado (stdio, 4 tools)
 ├── agents/
 │   ├── provider.py               # Fábrica de LLMs + helper de callbacks (Langfuse opt-in)
 │   ├── basic_agent.py            # LCEL chain simples
@@ -125,114 +276,3 @@ graph TD
 ├── requirements.txt
 └── LICENSE
 ```
-
----
-
-## Quick start
-
-```bash
-git clone https://github.com/RenanMiqueloti/agents-AI.git
-cd agents-AI
-python -m venv .venv
-# Windows: .venv\Scripts\activate | Linux/Mac: source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Crie `.env` com as chaves que for usar:
-
-```env
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-```
-
-```bash
-# Ollama: garanta que o modelo de chat e o de embeddings estão disponíveis
-ollama pull qwen3:8b
-ollama pull nomic-embed-text   # embeddings dedicados para o agente RAG
-
-# Painel Streamlit
-streamlit run main.py
-
-# HITL demo (terminal)
-python -m agents.hitl_agent
-
-# Evals
-python -m evals.evaluate
-```
-
----
-
-## Evals
-
-O harness em `evals/evaluate.py` avalia cada agente com LLM-as-judge em três dimensões:
-
-| Dimensão | O que mede |
-|---|---|
-| `correctness` | A resposta está factualmente correta? |
-| `helpfulness` | A resposta realmente ajuda o usuário? |
-| `conciseness` | A resposta é breve sem perder informação? |
-
-Os resultados são salvos em `evals/results.json` para rastreamento de regressão.
-
----
-
-## Deploy live (Hugging Face Spaces)
-
-O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingface.co/spaces) sem precisar de GPU — setup em ~5 min:
-
-1. Crie um Space em [huggingface.co/new-space](https://huggingface.co/new-space) → SDK **Streamlit** → visibilidade **Public**.
-2. No `README.md` do Space, cole o frontmatter:
-   ```yaml
-   ---
-   title: agents-AI
-   emoji: 🔌
-   colorFrom: blue
-   colorTo: indigo
-   sdk: streamlit
-   sdk_version: 1.35.0
-   app_file: main.py
-   pinned: false
-   license: mit
-   ---
-   ```
-3. Faça push deste repo para o remote do Space (ou ative o **Sync from GitHub** na UI).
-4. Em **Settings → Variables and secrets**, adicione `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` e opcionalmente `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`.
-5. Aguarde o build (~3-5 min). O Space fica em `huggingface.co/spaces/{seu-user}/agents-AI`.
-
-> **Limitação:** Ollama não roda em Spaces free — selecione `claude` ou `openai` na sidebar quando estiver hospedado. A versão local com `streamlit run main.py` continua suportando os três providers.
-
----
-
-## Observability — Langfuse (opt-in)
-
-Para tracing detalhado das execuções dos agentes — spans, custos por run, prompts/respostas, tokens, latência por nó do grafo — defina três variáveis no `.env`:
-
-```env
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=https://cloud.langfuse.com   # opcional (default: cloud Langfuse)
-```
-
-Sem essas keys, todos os agentes funcionam idênticos, mas sem tracing. Com elas, todo `runnable.invoke(..., config=callbacks_config())` envia spans ao seu projeto Langfuse — incluindo as chains LCEL (`basic`, `memory`, `rag`) e o grafo `tool`. O agente `hitl` não é instrumentado por padrão (streaming + `interrupt()` exigem hook manual); o caminho para estender é o helper [`agents/provider.py:callbacks_config`](agents/provider.py).
-
-[Free tier do Langfuse →](https://langfuse.com)
-
----
-
-## Design decisions
-
-**Por que LangGraph e não CrewAI?**
-LangGraph venceu CrewAI em stars do GitHub em early 2026 por uma razão concreta: reducer-based state management. Cada nó declara como atualiza o estado; conflitos em execuções paralelas são resolvidos deterministicamente. CrewAI abstrai isso — útil em demos, problemático em produção com audit trail.
-
-**Por que `interrupt()` e não polling?**
-`interrupt()` serializa o grafo completo via checkpointer (MemorySaver em memória, PostgresSaver em produção). A execução retoma do ponto exato — não do início. Polling exigiria estado externo e re-execução parcial do grafo.
-
-**Por que um servidor MCP customizado?**
-Consumir MCP é commodity (78% das enterprises já têm agentes MCP em produção). *Implementar* um servidor MCP é raro. Este projeto demonstra os dois lados do protocolo.
-
-**Por que FAISS no agente RAG e não Qdrant?**
-FAISS é embeddable (zero serviço externo) e suficiente para o caso de uso aqui: corpus estático em `data/docs/`, indexação em memória no startup, sem filtros nem escala horizontal. Mantém o quick-start em um único `pip install`. Quando o caso exige corpus dinâmico, retrieval híbrido e produção, o projeto irmão [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) usa Qdrant — separação intencional entre os dois repositórios.
-
-![Agente RAG respondendo grounded](rag_agentes.png)
-
-> RAG agent extraindo número específico do `data/docs/exemplo.txt` — resposta ancorada no contexto recuperado, não inventada pelo LLM.
