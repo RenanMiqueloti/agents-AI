@@ -2,31 +2,155 @@
   {
     "id": "a001",
     "agent": "basic",
-    "prompt": "What is the capital of France?",
-    "expected_themes": "Paris should be mentioned as the capital city."
+    "prompt": "Qual a capital da França?",
+    "expected_themes": "Paris."
   },
   {
     "id": "a002",
-    "agent": "tool",
-    "prompt": "What is 25 * 48?",
-    "expected_themes": "The answer should be 1200."
+    "agent": "basic",
+    "prompt": "Quem escreveu Dom Casmurro?",
+    "expected_themes": "Machado de Assis."
   },
   {
     "id": "a003",
-    "agent": "tool",
-    "prompt": "What is today's date?",
-    "expected_themes": "A valid ISO date string (YYYY-MM-DD) for the current day."
+    "agent": "basic",
+    "prompt": "Em uma frase, o que é o Model Context Protocol (MCP)?",
+    "expected_themes": "Protocolo aberto que padroniza como agentes consomem ferramentas e fontes de contexto externas."
   },
   {
     "id": "a004",
-    "agent": "memory",
-    "prompt": "My name is Renan. Remember it.",
-    "expected_themes": "The agent should acknowledge storing the name Renan."
+    "agent": "basic",
+    "prompt": "Cite três benefícios do LangGraph sobre uma chain LCEL pura.",
+    "expected_themes": "Estado de grafo explícito, suporte a HITL via interrupt(), checkpointing/durabilidade entre execuções."
   },
   {
     "id": "a005",
+    "agent": "basic",
+    "prompt": "Explique brevemente a diferença entre RAG denso e RAG com retrieval híbrido.",
+    "expected_themes": "Híbrido combina busca densa (vetorial) com esparsa (BM25/keyword) e re-ranqueia, para melhor recall em consultas mistas."
+  },
+
+  {
+    "id": "a006",
+    "agent": "tool",
+    "prompt": "Use a ferramenta soma para somar 25 e 48.",
+    "expected_themes": "Resultado 73, idealmente via tool call (não cálculo mental)."
+  },
+  {
+    "id": "a007",
+    "agent": "tool",
+    "prompt": "Some 100 com 200, por favor.",
+    "expected_themes": "Resultado 300."
+  },
+  {
+    "id": "a008",
+    "agent": "tool",
+    "prompt": "Que data é hoje? Use a ferramenta apropriada.",
+    "expected_themes": "Uma string ISO 8601 do dia atual obtida via tool data_hoje, não inventada."
+  },
+  {
+    "id": "a009",
+    "agent": "tool",
+    "prompt": "Some 'banana' com 5.",
+    "expected_themes": "Recusar graciosamente — a ferramenta soma exige dois números válidos; agente deve reportar a limitação sem alucinar resultado."
+  },
+  {
+    "id": "a010",
+    "agent": "tool",
+    "prompt": "Some 3, 4 e 5 — tudo de uma vez.",
+    "expected_themes": "Reportar limitação (tool aceita só 2) ou compor em duas chamadas; o resultado correto seria 12."
+  },
+
+  {
+    "id": "a011",
     "agent": "memory",
-    "prompt": "What is my name?",
-    "expected_themes": "The agent should recall 'Renan' from the prior turn (tests memory persistence)."
+    "prompt": "Meu nome é Renan e trabalho com IA aplicada.",
+    "expected_themes": "Confirmação de que armazenou a informação (sem inventar dados extras)."
+  },
+  {
+    "id": "a012",
+    "agent": "memory",
+    "prompt": "Qual é meu nome?",
+    "expected_themes": "Renan — recuperado do turno anterior, testando persistência de memória."
+  },
+  {
+    "id": "a013",
+    "agent": "memory",
+    "prompt": "Estou focado em agentes LangGraph e RAG.",
+    "expected_themes": "Confirmação."
+  },
+  {
+    "id": "a014",
+    "agent": "memory",
+    "prompt": "Em que estou focado, segundo o que te contei?",
+    "expected_themes": "Agentes LangGraph e RAG."
+  },
+  {
+    "id": "a015",
+    "agent": "memory",
+    "prompt": "Resuma o que você sabe sobre mim em uma frase.",
+    "expected_themes": "Renan, trabalha com IA aplicada, focado em agentes LangGraph e RAG."
+  },
+
+  {
+    "id": "a016",
+    "agent": "rag",
+    "prompt": "Qual foi a receita total no Q3 2025?",
+    "expected_themes": "R$ 15.200.000 (ou 15,2 milhões), com base em data/docs/exemplo.txt."
+  },
+  {
+    "id": "a017",
+    "agent": "rag",
+    "prompt": "Qual a margem EBITDA reportada?",
+    "expected_themes": "34,2%."
+  },
+  {
+    "id": "a018",
+    "agent": "rag",
+    "prompt": "Quantos clientes ativos a empresa tinha?",
+    "expected_themes": "12.450."
+  },
+  {
+    "id": "a019",
+    "agent": "rag",
+    "prompt": "Qual foi o orçamento de marketing executado no Q3?",
+    "expected_themes": "Não consta no contexto — agente deve reconhecer e dizer que não sabe (evitando alucinação)."
+  },
+  {
+    "id": "a020",
+    "agent": "rag",
+    "prompt": "Quem é o CEO da empresa?",
+    "expected_themes": "Não consta no contexto — agente deve dizer que não sabe."
+  },
+
+  {
+    "id": "a021",
+    "agent": "hitl_approve",
+    "prompt": "Send an email to admin@example.com with subject 'Weekly Report' and body 'All systems nominal.'",
+    "expected_themes": "Após aprovação automática, confirmação simulada de envio (a tool send_email retorna 'E-mail enviado para admin@example.com')."
+  },
+  {
+    "id": "a022",
+    "agent": "hitl_reject",
+    "prompt": "Delete the file /tmp/critical_backup.tar.gz",
+    "expected_themes": "Após rejeição, mensagem de cancelamento ('Ação cancelada pelo usuário'); a tool delete_file NÃO deve aparecer no output final."
+  },
+  {
+    "id": "a023",
+    "agent": "hitl_safe",
+    "prompt": "What is 2 + 2? Answer briefly.",
+    "expected_themes": "Resposta direta '4' sem disparar interrupt — nenhuma tool de alto impacto deve ser invocada."
+  },
+  {
+    "id": "a024",
+    "agent": "hitl_approve",
+    "prompt": "Send an email to renan@example.com saying the Q3 financials were approved.",
+    "expected_themes": "Após aprovação, confirmação de envio mencionando renan@example.com."
+  },
+  {
+    "id": "a025",
+    "agent": "hitl_reject",
+    "prompt": "Delete /home/user/important_photos/",
+    "expected_themes": "Após rejeição, mensagem de cancelamento — agente NÃO deve executar a deleção."
   }
 ]
