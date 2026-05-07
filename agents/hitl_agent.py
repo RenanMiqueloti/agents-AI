@@ -22,37 +22,39 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
+from pydantic import BaseModel, Field
 
 from agents.provider import Provider, get_llm
+
+# ── Schemas Pydantic para os args das ferramentas ────────────────────────
+
+
+class SendEmailInput(BaseModel):
+    """Argumentos validados para :func:`send_email`."""
+
+    to: str = Field(..., description="Endereço de e-mail do destinatário.")
+    subject: str = Field(..., description="Assunto do e-mail.")
+    body: str = Field(..., description="Corpo do e-mail em texto simples.")
+
+
+class DeleteFileInput(BaseModel):
+    """Argumentos validados para :func:`delete_file`."""
+
+    path: str = Field(..., description="Caminho absoluto do arquivo a deletar.")
+
 
 # ── Ferramentas de alto impacto (requerem aprovação) ─────────────────────
 
 
-@tool
+@tool("send_email", args_schema=SendEmailInput)
 def send_email(to: str, subject: str, body: str) -> str:
-    """Envia um e-mail (simulado). Requer aprovação humana antes de executar.
-
-    Args:
-        to: Endereço de e-mail do destinatário.
-        subject: Assunto do e-mail.
-        body: Corpo do e-mail em texto simples.
-
-    Returns:
-        Confirmação de envio simulado.
-    """
+    """Envia um e-mail (simulado). Requer aprovação humana antes de executar."""
     return f"✉️ E-mail enviado para {to} | Assunto: {subject}"
 
 
-@tool
+@tool("delete_file", args_schema=DeleteFileInput)
 def delete_file(path: str) -> str:
-    """Deleta um arquivo (simulado). Requer aprovação humana.
-
-    Args:
-        path: Caminho completo do arquivo a deletar.
-
-    Returns:
-        Confirmação de deleção simulada.
-    """
+    """Deleta um arquivo (simulado). Requer aprovação humana."""
     return f"🗑️ Arquivo '{path}' deletado (simulado)."
 
 

@@ -139,15 +139,29 @@ def test_basic_agent_format_response_with_aimessage_like() -> None:
 def test_tool_agent_soma_tool() -> None:
     """The ``soma`` tool itself is a pure function and easy to unit-test."""
     pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
     from agents.tool_agent import soma
 
     # langchain wraps @tool functions; .invoke is the supported entrypoint.
-    assert soma.invoke({"expressao": "3 4"}) == 7.0
+    assert soma.invoke({"a": 3, "b": 4}) == 7.0
 
 
-def test_tool_agent_soma_rejects_bad_input() -> None:
+def test_tool_agent_soma_rejects_non_numeric_input() -> None:
+    """Pydantic validation should reject non-coercible string args."""
     pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
     from agents.tool_agent import soma
 
-    with pytest.raises(ValueError, match="dois números"):
-        soma.invoke({"expressao": "1 2 3"})
+    # ``"banana"`` is not coercible to float — Pydantic raises before the body runs.
+    with pytest.raises(Exception):  # noqa: B017
+        soma.invoke({"a": "banana", "b": 5})
+
+
+def test_tool_agent_soma_rejects_missing_args() -> None:
+    """Both ``a`` and ``b`` are required by the SomaInput schema."""
+    pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
+    from agents.tool_agent import soma
+
+    with pytest.raises(Exception):  # noqa: B017
+        soma.invoke({"a": 3})
