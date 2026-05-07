@@ -3,10 +3,14 @@
 ![CI](https://github.com/RenanMiqueloti/agents-AI/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-0.4+-276749.svg)
+![MCP](https://img.shields.io/badge/MCP-server-2b6cb0.svg)
 
 Referência de padrões de produção para agentes de IA: **MCP server customizado**, **LangGraph HITL**, multi-provider (Ollama / Claude / OpenAI) e **evals com LLM-as-judge** — tudo em um único repositório executável.
 
 ![dashboard](dashboard_principal.png)
+
+> Screenshots desta página são da v0.1 do painel; a versão atual também inclui o agente HITL na sidebar com fluxo `interrupt → aprovação → resume`.
 
 ---
 
@@ -79,6 +83,10 @@ graph TD
 | Com Ferramentas | Executa tools (soma, data atual) | `create_react_agent` (LangGraph) |
 | RAG | Consulta documentos em `data/docs/` | LCEL RAG chain + FAISS |
 | **HITL** | Pausa para aprovação em ações de alto impacto | LangGraph `interrupt()` + `MemorySaver` |
+
+![Comparação de agentes lado a lado](comparacao_agentes.png)
+
+> Modo "Comparar Todos" do painel: três agentes respondendo à mesma pergunta em paralelo — útil para demonstrar diferença de comportamento entre LCEL puro, memória e RAG sem trocar de tela.
 
 ---
 
@@ -194,3 +202,7 @@ Consumir MCP é commodity (78% das enterprises já têm agentes MCP em produçã
 
 **Por que FAISS no agente RAG e não Qdrant?**
 FAISS é embeddable (zero serviço externo) e suficiente para o caso de uso aqui: corpus estático em `data/docs/`, indexação em memória no startup, sem filtros nem escala horizontal. Mantém o quick-start em um único `pip install`. Quando o caso exige corpus dinâmico, retrieval híbrido e produção, o projeto irmão [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) usa Qdrant — separação intencional entre os dois repositórios.
+
+![Agente RAG respondendo grounded](rag_agentes.png)
+
+> RAG agent extraindo número específico do `data/docs/exemplo.txt` — resposta ancorada no contexto recuperado, não inventada pelo LLM.
