@@ -2,11 +2,16 @@
 
 Padrão atual: ``create_react_agent`` do ``langgraph.prebuilt`` com
 ``@tool`` decorators. Multi-provider via :func:`agents.provider.get_llm`.
+
+Ferramentas expostas:
+- :func:`soma` — soma dois números.
+- :func:`data_hoje` — data/hora UTC atual em ISO 8601.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import UTC, datetime
 
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
@@ -33,6 +38,23 @@ def soma(expressao: str) -> float:
     return float(partes[0]) + float(partes[1])
 
 
+@tool
+def data_hoje(_unused: str = "") -> str:
+    """Retorna a data e hora UTC atual em ISO 8601.
+
+    Use esta ferramenta quando o usuário perguntar a data atual, dia da semana
+    ou hora — não tente adivinhar a partir do conhecimento de treino.
+
+    Args:
+        _unused: Argumento não utilizado (alguns LLMs exigem assinatura com
+            pelo menos um parâmetro mesmo quando a ferramenta não precisa).
+
+    Returns:
+        Data/hora ISO 8601 com timezone, ex: ``'2026-05-07T12:34:56+00:00'``.
+    """
+    return datetime.now(tz=UTC).isoformat()
+
+
 def format_response(result: object) -> str:
     """Limpa e trunca a resposta para no máximo 2 frases."""
     if hasattr(result, "content"):
@@ -55,7 +77,7 @@ def create_tool_agent(provider: Provider = "ollama") -> Callable[[str], str]:
         Callable que recebe um prompt e devolve a resposta formatada.
     """
     llm = get_llm(provider)
-    agent = create_react_agent(llm, tools=[soma])
+    agent = create_react_agent(llm, tools=[soma, data_hoje])
 
     def run(prompt: str) -> str:
         result = agent.invoke(
