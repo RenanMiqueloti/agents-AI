@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    image: agents-ai:local
+    container_name: agents-ai
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      # Aponta o cliente langchain_ollama pro serviço `ollama` deste compose quando
+      # ele é levantado via `--profile ollama`. Se preferir Ollama na host machine,
+      # sobrescreva no .env (ex.: OLLAMA_HOST=http://host.docker.internal:11434).
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agents-ai-ollama
+    profiles: [ollama]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama-data:

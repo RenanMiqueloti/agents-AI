@@ -85,6 +85,15 @@ python -m agents.hitl_agent      # demo HITL no terminal
 python -m evals.evaluate         # roda os 25 evals (juiz: gpt-5-mini)
 ```
 
+### Via Docker
+
+```bash
+docker compose up app                  # painel em http://localhost:8501
+docker compose --profile ollama up     # painel + servidor Ollama containerizado
+```
+
+Configure as keys no `.env` antes. Sem `--profile ollama`, exporte `OLLAMA_HOST=http://host.docker.internal:11434` no `.env` para usar o Ollama da host machine (Docker Desktop).
+
 ---
 
 ## Arquitetura HITL
