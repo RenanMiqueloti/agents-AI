@@ -6,7 +6,7 @@ agente compatível pode consumir — incluindo o painel agents-AI.
 Ferramentas expostas:
     get_current_datetime  — data e hora atual em ISO 8601
     calculate             — avaliação segura de expressões matemáticas
-    search_knowledge      — busca stub no knowledge base (conecte ao seu Qdrant aqui)
+    search_knowledge      — busca semântica em data/docs/ (FAISS + nomic-embed-text)
     count_tokens          — estimativa de tokens em um texto
 
 Uso:
@@ -18,8 +18,9 @@ apontando para:
     command: python
     args: ["/path/to/mcp_server.py"]
 
-Dependência:
-    pip install mcp
+Dependências:
+    pip install -r requirements.txt
+    ollama pull nomic-embed-text   # para search_knowledge
 
 Referência: https://modelcontextprotocol.io/docs/concepts/servers
 """
@@ -30,6 +31,8 @@ import asyncio
 import json
 import math
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 try:
     from mcp import types
@@ -39,6 +42,62 @@ try:
     _MCP_AVAILABLE = True
 except ImportError:
     _MCP_AVAILABLE = False
+
+
+# ── Knowledge base (FAISS over data/docs/) ────────────────────────────────
+
+_DOCS_DIR = Path(__file__).parent / "data" / "docs"
+_EMBEDDING_MODEL = "nomic-embed-text"
+
+# Lazy-initialized on the first ``search_knowledge`` call so a missing
+# Ollama daemon doesn't prevent the rest of the server from starting.
+_vectorstore: Any = None
+_vectorstore_error: str | None = None
+
+
+def _build_vectorstore() -> Any:
+    """Indexa data/docs/*.txt com FAISS e nomic-embed-text."""
+    from langchain_community.document_loaders import TextLoader
+    from langchain_community.vectorstores import FAISS
+    from langchain_ollama import OllamaEmbeddings
+    from langchain_text_splitters import CharacterTextSplitter
+
+    if not _DOCS_DIR.is_dir():
+        raise FileNotFoundError(f"Knowledge base directory not found: {_DOCS_DIR}")
+
+    documents = []
+    for txt_path in sorted(_DOCS_DIR.glob("*.txt")):
+        documents.extend(TextLoader(str(txt_path), encoding="utf-8").load())
+
+    if not documents:
+        raise ValueError(f"No .txt documents found in {_DOCS_DIR}")
+
+    splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    chunks = splitter.split_documents(documents)
+
+    embeddings = OllamaEmbeddings(model=_EMBEDDING_MODEL)
+    return FAISS.from_documents(chunks, embeddings)
+
+
+def _get_vectorstore() -> Any:
+    """Returns the cached vectorstore, building it on first access."""
+    global _vectorstore, _vectorstore_error
+    if _vectorstore is not None:
+        return _vectorstore
+    if _vectorstore_error is not None:
+        # Surface the original failure rather than retrying every call.
+        raise RuntimeError(_vectorstore_error)
+    try:
+        _vectorstore = _build_vectorstore()
+    except Exception as exc:
+        _vectorstore_error = (
+            f"Failed to build knowledge base: {exc}. "
+            f"Ensure Ollama is running and `ollama pull {_EMBEDDING_MODEL}` is done, "
+            f"and that {_DOCS_DIR} contains .txt documents."
+        )
+        raise RuntimeError(_vectorstore_error) from exc
+    return _vectorstore
+
 
 # ── Server definition ─────────────────────────────────────────────────────
 
@@ -80,8 +139,10 @@ if _MCP_AVAILABLE:
             types.Tool(
                 name="search_knowledge",
                 description=(
-                    "Searches the local knowledge base for documents relevant to a query. "
-                    "In production, connect this to your Qdrant/pgvector instance."
+                    "Semantic search over the local knowledge base in data/docs/. "
+                    "Uses FAISS in-memory + nomic-embed-text via Ollama. "
+                    "Drop new .txt files in data/docs/ to extend the corpus; the index "
+                    "is built lazily on the first call."
                 ),
                 inputSchema={
                     "type": "object",
@@ -119,7 +180,6 @@ if _MCP_AVAILABLE:
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-
         if name == "get_current_datetime":
             return [
                 types.TextContent(
@@ -142,21 +202,37 @@ if _MCP_AVAILABLE:
         if name == "search_knowledge":
             query = arguments.get("query", "")
             top_k = int(arguments.get("top_k", 3))
-            # ── Stub — substitua pela integração real com Qdrant ──────────
-            # Exemplo de integração real:
-            #   from qdrant_client import QdrantClient
-            #   client = QdrantClient(url=os.getenv("QDRANT_URL"))
-            #   results = client.search("docs", query_vector=embed(query), limit=top_k)
-            stub = [
+
+            try:
+                vs = _get_vectorstore()
+                results = vs.similarity_search_with_score(query, k=top_k)
+            except Exception as exc:
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"error": str(exc)},
+                            indent=2,
+                            ensure_ascii=False,
+                        ),
+                    )
+                ]
+
+            formatted = [
                 {
                     "rank": i + 1,
-                    "text": f"[Placeholder result {i + 1} for '{query}'] "
-                    "Replace this stub with a real Qdrant query.",
-                    "score": round(0.95 - i * 0.1, 2),
+                    "text": doc.page_content,
+                    "score": round(float(score), 4),  # FAISS distance — lower is closer
+                    "source": doc.metadata.get("source", "unknown"),
                 }
-                for i in range(top_k)
+                for i, (doc, score) in enumerate(results)
             ]
-            return [types.TextContent(type="text", text=json.dumps(stub, indent=2))]
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(formatted, indent=2, ensure_ascii=False),
+                )
+            ]
 
         if name == "count_tokens":
             text = arguments.get("text", "")

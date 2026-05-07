@@ -1,11 +1,12 @@
 """Agente com ferramentas usando ``create_react_agent`` do LangGraph.
 
 Padrão atual: ``create_react_agent`` do ``langgraph.prebuilt`` com
-``@tool`` decorators. Multi-provider via :func:`agents.provider.get_llm`.
+``@tool`` decorators e schemas Pydantic. Multi-provider via
+:func:`agents.provider.get_llm`.
 
 Ferramentas expostas:
-- :func:`soma` — soma dois números.
-- :func:`data_hoje` — data/hora UTC atual em ISO 8601.
+- :func:`soma` — soma dois números (``SomaInput``).
+- :func:`data_hoje` — data/hora UTC atual em ISO 8601 (sem args).
 """
 
 from __future__ import annotations
@@ -15,42 +16,41 @@ from datetime import UTC, datetime
 
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
+from pydantic import BaseModel, Field
 
 from agents.provider import Provider, callbacks_config, get_llm
 
 
-@tool
-def soma(expressao: str) -> float:
-    """Soma dois números separados por espaço.
+class SomaInput(BaseModel):
+    """Argumentos validados para a ferramenta :func:`soma`."""
 
-    Args:
-        expressao: String com dois números separados por espaço. Ex: ``'3 4'``.
+    a: float = Field(..., description="Primeiro número.")
+    b: float = Field(..., description="Segundo número.")
 
-    Returns:
-        Resultado da soma como float.
 
-    Raises:
-        ValueError: Se a expressão não contiver exatamente dois números.
+class DataHojeInput(BaseModel):
+    """Sem argumentos — :func:`data_hoje` não precisa de input."""
+
+
+@tool("soma", args_schema=SomaInput)
+def soma(a: float, b: float) -> float:
+    """Soma dois números.
+
+    Use esta ferramenta quando o usuário pedir uma soma — não tente
+    calcular mentalmente. O Pydantic valida que ``a`` e ``b`` são
+    números antes da execução, então strings não-numéricas levantam
+    erro automaticamente.
     """
-    partes = expressao.strip().split()
-    if len(partes) != 2:
-        raise ValueError(f"Esperado dois números separados por espaço, recebi: {expressao!r}")
-    return float(partes[0]) + float(partes[1])
+    return a + b
 
 
-@tool
-def data_hoje(_unused: str = "") -> str:
+@tool("data_hoje", args_schema=DataHojeInput)
+def data_hoje() -> str:
     """Retorna a data e hora UTC atual em ISO 8601.
 
-    Use esta ferramenta quando o usuário perguntar a data atual, dia da semana
-    ou hora — não tente adivinhar a partir do conhecimento de treino.
-
-    Args:
-        _unused: Argumento não utilizado (alguns LLMs exigem assinatura com
-            pelo menos um parâmetro mesmo quando a ferramenta não precisa).
-
-    Returns:
-        Data/hora ISO 8601 com timezone, ex: ``'2026-05-07T12:34:56+00:00'``.
+    Use esta ferramenta quando o usuário perguntar a data atual, dia da
+    semana ou hora — não tente adivinhar a partir do conhecimento de
+    treino.
     """
     return datetime.now(tz=UTC).isoformat()
 
