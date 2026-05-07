@@ -238,7 +238,7 @@ LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_HOST=https://cloud.langfuse.com   # opcional (default: cloud Langfuse)
 ```
 
-Sem essas keys, os agentes funcionam idênticos. Com elas, todo `runnable.invoke(..., config=callbacks_config())` envia spans ao seu projeto Langfuse — instrumentado em `basic`, `memory`, `tool` e `rag`. O agente `hitl` ainda não está instrumentado por default (streaming + `interrupt()` exigem hook manual); o ponto de extensão é o helper [`callbacks_config`](agents/provider.py).
+Sem essas keys, os agentes funcionam idênticos. Com elas, todos os cinco agentes — `basic`, `memory`, `tool`, `rag` e `hitl` — emitem spans ao seu projeto Langfuse: as chains LCEL e os grafos LangGraph passam por [`callbacks_config()`](agents/provider.py); no caso do `hitl`, o mesmo config viaja com o `agent.stream(...)` inicial e com o `Command(resume=...)`, então a fase de aprovação humana também aparece como parte do trace.
 
 [Free tier do Langfuse →](https://langfuse.com)
 
