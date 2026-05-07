@@ -5,14 +5,22 @@ Suporta três providers:
 - ``claude``  — Claude Haiku 4.5 via Anthropic API (requer ANTHROPIC_API_KEY)
 - ``openai``  — GPT-5 mini via OpenAI API (requer OPENAI_API_KEY)
 
+Tracing (opt-in): se ``LANGFUSE_PUBLIC_KEY`` e ``LANGFUSE_SECRET_KEY``
+estiverem definidas, :func:`callbacks_config` retorna um ``RunnableConfig``
+com o callback Langfuse. Passe-o em todo ``runnable.invoke(..., config=...)``
+para emitir spans, custos e tokens.
+
 Usage::
 
-    from agents.provider import get_llm
+    from agents.provider import callbacks_config, get_llm
     llm = get_llm("claude")
+    response = llm.invoke(prompt, config=callbacks_config())
 """
 
+from __future__ import annotations
+
 import os
-from typing import Literal
+from typing import Any, Literal
 
 Provider = Literal["ollama", "claude", "openai"]
 
@@ -69,3 +77,53 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
         )
 
     raise ValueError(f"Provider desconhecido: {provider!r}. Use 'ollama', 'claude' ou 'openai'.")
+
+
+def _build_langfuse_callback() -> Any | None:
+    """Constrói o callback Langfuse se credenciais e pacote estiverem disponíveis.
+
+    Returns:
+        Instância de ``CallbackHandler`` ou ``None`` se as keys não foram
+        fornecidas ou o pacote ``langfuse`` não está instalado.
+    """
+    if not (os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY")):
+        return None
+
+    try:
+        from langfuse.langchain import CallbackHandler  # type: ignore[import]
+    except ImportError:
+        try:
+            from langfuse.callback import CallbackHandler  # type: ignore[import]
+        except ImportError:
+            return None
+
+    return CallbackHandler(
+        public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
+        secret_key=os.environ["LANGFUSE_SECRET_KEY"],
+        host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+    )
+
+
+def get_callbacks() -> list:
+    """Retorna callbacks LangChain ativos baseados em env vars.
+
+    Atualmente expõe apenas Langfuse. Para adicionar LangSmith, Helicone,
+    etc., estenda esta função e o ``_build_*`` helper correspondente.
+    """
+    callbacks: list = []
+    lf = _build_langfuse_callback()
+    if lf is not None:
+        callbacks.append(lf)
+    return callbacks
+
+
+def callbacks_config() -> dict:
+    """Retorna um ``RunnableConfig`` com callbacks ativos (vazio se nenhum).
+
+    Uso típico::
+
+        from agents.provider import callbacks_config, get_llm
+        response = get_llm("claude").invoke(prompt, config=callbacks_config())
+    """
+    cbs = get_callbacks()
+    return {"callbacks": cbs} if cbs else {}

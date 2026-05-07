@@ -165,6 +165,22 @@ Os resultados são salvos em `evals/results.json` para rastreamento de regressã
 
 ---
 
+## Observability — Langfuse (opt-in)
+
+Para tracing detalhado das execuções dos agentes — spans, custos por run, prompts/respostas, tokens, latência por nó do grafo — defina três variáveis no `.env`:
+
+```env
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com   # opcional (default: cloud Langfuse)
+```
+
+Sem essas keys, todos os agentes funcionam idênticos, mas sem tracing. Com elas, todo `runnable.invoke(..., config=callbacks_config())` envia spans ao seu projeto Langfuse — incluindo as chains LCEL (`basic`, `memory`, `rag`) e o grafo `tool`. O agente `hitl` não é instrumentado por padrão (streaming + `interrupt()` exigem hook manual); o caminho para estender é o helper [`agents/provider.py:callbacks_config`](agents/provider.py).
+
+[Free tier do Langfuse →](https://langfuse.com)
+
+---
+
 ## Design decisions
 
 **Por que LangGraph e não CrewAI?**
