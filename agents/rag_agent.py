@@ -3,8 +3,13 @@
 Pipeline: carregar docs → chunkar → embedar → indexar (FAISS) → retriever
 top-3 → prompt → LLM → ``StrOutputParser``.
 
-Embeddings: sempre via Ollama (gratuito, sem API). Chat model: configurável
+Embeddings: ``nomic-embed-text`` via Ollama (768 dim, dedicado a embeddings,
+muito mais rápido que usar um modelo de chat). Chat model: configurável
 via :func:`agents.provider.get_llm` (ollama / claude / openai).
+
+Pré-requisito local::
+
+    ollama pull nomic-embed-text
 """
 
 from __future__ import annotations
@@ -21,9 +26,9 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
-from agents.provider import Provider, get_llm
+from agents.provider import Provider, callbacks_config, get_llm
 
-_EMBEDDING_MODEL = "llama3"
+_EMBEDDING_MODEL = "nomic-embed-text"
 
 
 def format_response(result: object) -> str:
@@ -85,7 +90,7 @@ def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     )
 
     def run(prompt_text: str) -> str:
-        response = rag_chain.invoke(prompt_text)
+        response = rag_chain.invoke(prompt_text, config=callbacks_config())
         return format_response(response)
 
     return run
