@@ -40,6 +40,8 @@ def test_readme_present_and_branded() -> None:
         "agents/memory_agent.py",
         "agents/rag_agent.py",
         "agents/tool_agent.py",
+        "api/__init__.py",
+        "api/server.py",
         "main.py",
         "mcp_server.py",
     ],
@@ -105,6 +107,15 @@ def test_mcp_server_imports() -> None:
     assert hasattr(mcp_server, "__file__")
 
 
+def test_api_server_imports() -> None:
+    pytest.importorskip("fastapi")
+    pytest.importorskip("langgraph")
+    from api.server import app
+
+    assert hasattr(app, "openapi")
+    assert any(route.path == "/health" for route in app.routes)
+
+
 def test_basic_agent_format_response_with_string() -> None:
     """``format_response`` must handle plain string output (Ollama-style)."""
     from agents.basic_agent import format_response
@@ -128,15 +139,29 @@ def test_basic_agent_format_response_with_aimessage_like() -> None:
 def test_tool_agent_soma_tool() -> None:
     """The ``soma`` tool itself is a pure function and easy to unit-test."""
     pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
     from agents.tool_agent import soma
 
     # langchain wraps @tool functions; .invoke is the supported entrypoint.
-    assert soma.invoke({"expressao": "3 4"}) == 7.0
+    assert soma.invoke({"a": 3, "b": 4}) == 7.0
 
 
-def test_tool_agent_soma_rejects_bad_input() -> None:
+def test_tool_agent_soma_rejects_non_numeric_input() -> None:
+    """Pydantic validation should reject non-coercible string args."""
     pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
     from agents.tool_agent import soma
 
-    with pytest.raises(ValueError, match="dois números"):
-        soma.invoke({"expressao": "1 2 3"})
+    # ``"banana"`` is not coercible to float — Pydantic raises before the body runs.
+    with pytest.raises(Exception):  # noqa: B017
+        soma.invoke({"a": "banana", "b": 5})
+
+
+def test_tool_agent_soma_rejects_missing_args() -> None:
+    """Both ``a`` and ``b`` are required by the SomaInput schema."""
+    pytest.importorskip("langchain_core")
+    pytest.importorskip("pydantic")
+    from agents.tool_agent import soma
+
+    with pytest.raises(Exception):  # noqa: B017
+        soma.invoke({"a": 3})
