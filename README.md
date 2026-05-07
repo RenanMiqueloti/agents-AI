@@ -174,7 +174,7 @@ Implementação em [`agents/hitl_agent.py`](agents/hitl_agent.py); UI integrada 
 |---|---|
 | `get_current_datetime` | Data/hora UTC em ISO 8601 |
 | `calculate` | Avalia expressões matemáticas com namespace restrito |
-| `search_knowledge` | Busca no knowledge base (stub — pluggable a Qdrant ou pgvector) |
+| `search_knowledge` | Busca semântica em `data/docs/` (FAISS in-memory + `nomic-embed-text` via Ollama; lazy init na 1ª call) |
 | `count_tokens` | Estimativa de tokens em um texto |
 
 ```bash
