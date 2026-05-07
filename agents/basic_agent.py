@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from agents.provider import Provider, get_llm
+from agents.provider import Provider, callbacks_config, get_llm
 
 
 def format_response(result: object) -> str:
@@ -48,7 +48,7 @@ def create_basic_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     llm = get_llm(provider)
 
     def run(prompt: str) -> str:
-        response = llm.invoke(prompt)
+        response = llm.invoke(prompt, config=callbacks_config())
         return format_response(response)
 
     return run

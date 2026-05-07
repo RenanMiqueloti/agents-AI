@@ -21,6 +21,9 @@ faiss-cpu>=1.8.0
 # MCP server — protocolo universal de integração de agentes (2026)
 mcp>=1.0.0
 
+# Observabilidade (opt-in via env vars LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY)
+langfuse>=3.0.0
+
 # Variáveis de ambiente
 python-dotenv>=1.0.0
 
