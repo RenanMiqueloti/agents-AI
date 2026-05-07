@@ -292,20 +292,25 @@ O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingfac
 ```text
 .
 ├── main.py                       # Painel Streamlit (UI multi-agente, fluxo HITL)
-├── mcp_server.py                 # Servidor MCP customizado (stdio, 4 tools)
+├── mcp_server.py                 # Servidor MCP (stdio, 4 tools, search_knowledge real)
 ├── agents/
 │   ├── provider.py               # Fábrica de LLMs + helper de callbacks (Langfuse opt-in)
 │   ├── basic_agent.py            # LCEL chain simples
 │   ├── memory_agent.py           # RunnableWithMessageHistory
-│   ├── tool_agent.py             # LangGraph ReAct + tools (soma, data_hoje)
+│   ├── tool_agent.py             # LangGraph ReAct + tools com Pydantic schemas
 │   ├── rag_agent.py              # LCEL RAG + FAISS + nomic-embed-text
 │   └── hitl_agent.py             # LangGraph interrupt() + MemorySaver
+├── api/
+│   └── server.py                 # FastAPI: POST /agent/{basic,tool,rag}
 ├── evals/
 │   ├── evaluate.py               # Harness LLM-as-judge + adapters HITL approve/reject/safe
 │   └── dataset.json              # 25 samples cobrindo todos os agentes
 ├── tests/test_smoke.py           # Smoke tests (AST-parse + factory imports)
-├── data/docs/                    # Coloque seus .txt aqui para o agente RAG
+├── data/docs/                    # Coloque seus .txt aqui para RAG agent + search_knowledge
 ├── .github/workflows/ci.yml      # CI: ruff lint + format + pytest
+├── Dockerfile                    # Multi-stage, roda Streamlit no runtime slim
+├── docker-compose.yml            # app + serviço ollama opt-in via --profile ollama
+├── .dockerignore
 ├── pyproject.toml                # Config ruff/pytest/mypy
 ├── requirements.txt
 └── LICENSE
