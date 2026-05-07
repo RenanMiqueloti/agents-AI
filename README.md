@@ -106,19 +106,22 @@ graph TD
 
 ```text
 .
-├── main.py                   # Dashboard Streamlit
-├── mcp_server.py             # Servidor MCP customizado (stdio transport)
+├── main.py                       # Dashboard Streamlit (UI multi-agente, fluxo HITL)
+├── mcp_server.py                 # Servidor MCP customizado (stdio transport, 4 tools)
 ├── agents/
-│   ├── provider.py           # Fábrica de LLMs por provider
-│   ├── basic_agent.py        # LCEL chain simples
-│   ├── memory_agent.py       # RunnableWithMessageHistory
-│   ├── tool_agent.py         # LangGraph ReAct + tools
-│   ├── rag_agent.py          # LCEL RAG + FAISS
-│   └── hitl_agent.py         # LangGraph interrupt() + MemorySaver ← novo
+│   ├── provider.py               # Fábrica de LLMs + helper de callbacks (Langfuse opt-in)
+│   ├── basic_agent.py            # LCEL chain simples
+│   ├── memory_agent.py           # RunnableWithMessageHistory
+│   ├── tool_agent.py             # LangGraph ReAct + tools (soma, data_hoje)
+│   ├── rag_agent.py              # LCEL RAG + FAISS + nomic-embed-text
+│   └── hitl_agent.py             # LangGraph interrupt() + MemorySaver
 ├── evals/
-│   ├── evaluate.py           # Harness LLM-as-judge
-│   └── dataset.json          # Dataset de regressão
-├── data/docs/                # Coloque seus .txt aqui para o agente RAG
+│   ├── evaluate.py               # Harness LLM-as-judge + adapters HITL approve/reject/safe
+│   └── dataset.json              # 25 samples cobrindo todos os agentes
+├── tests/test_smoke.py           # Smoke tests (AST-parse + factory imports)
+├── data/docs/                    # Coloque seus .txt aqui para o agente RAG
+├── .github/workflows/ci.yml      # CI: ruff lint + format + pytest
+├── pyproject.toml                # Config ruff/pytest/mypy
 ├── requirements.txt
 └── LICENSE
 ```
