@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
-from agents.provider import Provider, get_llm
+from agents.provider import Provider, callbacks_config, get_llm
 
 
 @tool
@@ -81,7 +81,8 @@ def create_tool_agent(provider: Provider = "ollama") -> Callable[[str], str]:
 
     def run(prompt: str) -> str:
         result = agent.invoke(
-            {"messages": [("human", f"Responda em português e seja breve: {prompt}")]}
+            {"messages": [("human", f"Responda em português e seja breve: {prompt}")]},
+            config=callbacks_config(),
         )
         last_msg = result["messages"][-1]
         return format_response(last_msg)

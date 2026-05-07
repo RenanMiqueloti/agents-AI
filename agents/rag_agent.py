@@ -26,7 +26,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
-from agents.provider import Provider, get_llm
+from agents.provider import Provider, callbacks_config, get_llm
 
 _EMBEDDING_MODEL = "nomic-embed-text"
 
@@ -90,7 +90,7 @@ def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     )
 
     def run(prompt_text: str) -> str:
-        response = rag_chain.invoke(prompt_text)
+        response = rag_chain.invoke(prompt_text, config=callbacks_config())
         return format_response(response)
 
     return run
