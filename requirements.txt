@@ -3,7 +3,7 @@ streamlit>=1.35.0
 
 # LangChain — núcleo e integrações (v0.3+ usa LCEL como padrão)
 langchain>=0.3.0
-langchain-core>=0.3.0
+langchain-core>=1.3.3
 langchain-community>=0.3.0
 langchain-text-splitters>=0.3.0
 
