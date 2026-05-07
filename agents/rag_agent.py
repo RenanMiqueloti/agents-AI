@@ -3,8 +3,13 @@
 Pipeline: carregar docs → chunkar → embedar → indexar (FAISS) → retriever
 top-3 → prompt → LLM → ``StrOutputParser``.
 
-Embeddings: sempre via Ollama (gratuito, sem API). Chat model: configurável
+Embeddings: ``nomic-embed-text`` via Ollama (768 dim, dedicado a embeddings,
+muito mais rápido que usar um modelo de chat). Chat model: configurável
 via :func:`agents.provider.get_llm` (ollama / claude / openai).
+
+Pré-requisito local::
+
+    ollama pull nomic-embed-text
 """
 
 from __future__ import annotations
@@ -23,7 +28,7 @@ from langchain_text_splitters import CharacterTextSplitter
 
 from agents.provider import Provider, get_llm
 
-_EMBEDDING_MODEL = "llama3"
+_EMBEDDING_MODEL = "nomic-embed-text"
 
 
 def format_response(result: object) -> str:

@@ -135,8 +135,9 @@ OPENAI_API_KEY=sk-...
 ```
 
 ```bash
-# Ollama: garanta que o modelo está disponível
+# Ollama: garanta que o modelo de chat e o de embeddings estão disponíveis
 ollama pull qwen3:8b
+ollama pull nomic-embed-text   # embeddings dedicados para o agente RAG
 
 # Painel Streamlit
 streamlit run main.py
