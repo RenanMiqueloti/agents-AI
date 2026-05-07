@@ -173,6 +173,33 @@ Os resultados são salvos em `evals/results.json` para rastreamento de regressã
 
 ---
 
+## Deploy live (Hugging Face Spaces)
+
+O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingface.co/spaces) sem precisar de GPU — setup em ~5 min:
+
+1. Crie um Space em [huggingface.co/new-space](https://huggingface.co/new-space) → SDK **Streamlit** → visibilidade **Public**.
+2. No `README.md` do Space, cole o frontmatter:
+   ```yaml
+   ---
+   title: agents-AI
+   emoji: 🔌
+   colorFrom: blue
+   colorTo: indigo
+   sdk: streamlit
+   sdk_version: 1.35.0
+   app_file: main.py
+   pinned: false
+   license: mit
+   ---
+   ```
+3. Faça push deste repo para o remote do Space (ou ative o **Sync from GitHub** na UI).
+4. Em **Settings → Variables and secrets**, adicione `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` e opcionalmente `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`.
+5. Aguarde o build (~3-5 min). O Space fica em `huggingface.co/spaces/{seu-user}/agents-AI`.
+
+> **Limitação:** Ollama não roda em Spaces free — selecione `claude` ou `openai` na sidebar quando estiver hospedado. A versão local com `streamlit run main.py` continua suportando os três providers.
+
+---
+
 ## Observability — Langfuse (opt-in)
 
 Para tracing detalhado das execuções dos agentes — spans, custos por run, prompts/respostas, tokens, latência por nó do grafo — defina três variáveis no `.env`:
