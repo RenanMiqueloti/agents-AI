@@ -96,6 +96,31 @@ Configure as keys no `.env` antes. Sem `--profile ollama`, exporte `OLLAMA_HOST=
 
 ---
 
+## API HTTP
+
+Para consumir os agentes fora do Streamlit, [`api/server.py`](api/server.py) expõe endpoints REST stateless. `memory` e `hitl` ficam fora — o primeiro tem estado por processo, o segundo precisa de streaming + `Command(resume=...)`.
+
+```bash
+uvicorn api.server:app --reload    # http://localhost:8000
+```
+
+| Endpoint | Descrição |
+|---|---|
+| `GET /health` | Liveness simples |
+| `POST /agent/{name}` | `name ∈ {basic, tool, rag}`; body `{"prompt": str, "provider": "ollama"\|"claude"\|"openai"}` |
+
+Exemplo:
+
+```bash
+curl -X POST http://localhost:8000/agent/basic \
+     -H "Content-Type: application/json" \
+     -d '{"prompt": "Qual a capital da França?", "provider": "openai"}'
+```
+
+OpenAPI interativa em `http://localhost:8000/docs`.
+
+---
+
 ## Arquitetura HITL
 
 ```mermaid

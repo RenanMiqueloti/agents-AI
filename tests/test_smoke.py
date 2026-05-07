@@ -40,6 +40,8 @@ def test_readme_present_and_branded() -> None:
         "agents/memory_agent.py",
         "agents/rag_agent.py",
         "agents/tool_agent.py",
+        "api/__init__.py",
+        "api/server.py",
         "main.py",
         "mcp_server.py",
     ],
@@ -103,6 +105,15 @@ def test_mcp_server_imports() -> None:
     import mcp_server
 
     assert hasattr(mcp_server, "__file__")
+
+
+def test_api_server_imports() -> None:
+    pytest.importorskip("fastapi")
+    pytest.importorskip("langgraph")
+    from api.server import app
+
+    assert hasattr(app, "openapi")
+    assert any(route.path == "/health" for route in app.routes)
 
 
 def test_basic_agent_format_response_with_string() -> None:
