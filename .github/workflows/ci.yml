@@ -32,7 +32,16 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: pip install pytest pytest-cov
-      - run: pytest -v --cov=. --cov-report=term-missing tests/
+      - name: Run pytest with coverage
+        run: pytest -v --cov=. --cov-report=term-missing --cov-report=xml tests/
         env:
           OPENAI_API_KEY: dummy
           ANTHROPIC_API_KEY: dummy
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,38 @@
+name: Feature request
+description: Sugerir uma nova capacidade — novo agente, ferramenta, integração, melhoria de eval, etc.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Caso de uso
+      description: Que problema você está tentando resolver?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      description: Como você acha que isso deveria funcionar?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Que outras soluções foram descartadas e por quê?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Tamanho estimado
+      options:
+        - Mudança pequena (< 1 dia)
+        - Mudança média (1-3 dias)
+        - Refactor / arquitetura (precisa de ADR em docs/adr/)
+    validations:
+      required: false
