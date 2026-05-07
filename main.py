@@ -1,6 +1,7 @@
 """Dashboard Streamlit — IA Agents com múltiplos providers e padrões de produção."""
 
 import os
+import uuid
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -87,6 +88,10 @@ if "hitl_config" not in st.session_state:
     st.session_state.hitl_config = None
 if "hitl_pending" not in st.session_state:
     st.session_state.hitl_pending = None  # dict com info do interrupt ou None
+if "hitl_thread_id" not in st.session_state:
+    # Cada sessão Streamlit tem seu próprio thread_id no MemorySaver, evitando
+    # que dois usuários simultâneos colidam no mesmo estado HITL pendente.
+    st.session_state.hitl_thread_id = f"hitl-{uuid.uuid4()}"
 
 
 # ---------------------------------------------------------------------------
@@ -144,12 +149,14 @@ def render_hitl_section(prov: Provider) -> None:
             st.session_state.hitl_agent = None
             st.session_state.hitl_config = None
             st.session_state.hitl_pending = None
+            # Novo thread_id descarta qualquer estado pendente no checkpointer.
+            st.session_state.hitl_thread_id = f"hitl-{uuid.uuid4()}"
             st.rerun()
 
     # ── Execução inicial ─────────────────────────────────────────────────
     if run_clicked and hitl_prompt.strip():
-        # Cria (ou recria) o agente
-        agent, config = create_hitl_agent(prov)
+        # Cria (ou recria) o agente com o thread_id desta sessão Streamlit.
+        agent, config = create_hitl_agent(prov, thread_id=st.session_state.hitl_thread_id)
         st.session_state.hitl_agent = agent
         st.session_state.hitl_config = config
         st.session_state.hitl_pending = None

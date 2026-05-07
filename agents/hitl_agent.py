@@ -127,11 +127,19 @@ def human_review_node(state: HITLState):
 # ── Graph factory ─────────────────────────────────────────────────────────
 
 
-def create_hitl_agent(provider: Provider = "ollama") -> tuple:
+def create_hitl_agent(
+    provider: Provider = "ollama",
+    thread_id: str = "hitl-demo-1",
+) -> tuple:
     """Cria o agente HITL compilado com MemorySaver para checkpointing.
 
     Args:
         provider: ``"ollama"``, ``"claude"`` ou ``"openai"``.
+        thread_id: Identificador único da thread no ``MemorySaver``. Em UIs
+            multi-usuário (Streamlit, FastAPI, etc.) **derive este valor da
+            sessão** — caso contrário, dois usuários simultâneos compartilham
+            o mesmo estado HITL pendente. O default ``"hitl-demo-1"`` só é
+            adequado para o demo CLI single-process.
 
     Returns:
         Tupla (compiled_graph, thread_config) — thread_config deve ser
@@ -151,7 +159,7 @@ def create_hitl_agent(provider: Provider = "ollama") -> tuple:
     graph.add_edge("tools", "agent")
 
     compiled = graph.compile(checkpointer=checkpointer, interrupt_before=[])
-    thread_config = {"configurable": {"thread_id": "hitl-demo-1"}}
+    thread_config = {"configurable": {"thread_id": thread_id}}
 
     return compiled, thread_config
 
