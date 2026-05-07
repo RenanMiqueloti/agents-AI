@@ -11,7 +11,7 @@ from langgraph.types import Command
 from agents.basic_agent import create_basic_agent
 from agents.hitl_agent import create_hitl_agent
 from agents.memory_agent import create_memory_agent
-from agents.provider import Provider
+from agents.provider import Provider, callbacks_config
 from agents.rag_agent import create_rag_agent
 from agents.tool_agent import create_tool_agent
 
@@ -157,6 +157,10 @@ def render_hitl_section(prov: Provider) -> None:
     if run_clicked and hitl_prompt.strip():
         # Cria (ou recria) o agente com o thread_id desta sessão Streamlit.
         agent, config = create_hitl_agent(prov, thread_id=st.session_state.hitl_thread_id)
+        # Mescla os callbacks ativos (Langfuse opt-in) no config; sem keys vira no-op.
+        # O config é reutilizado no resume — então o tracing cobre tanto a execução
+        # inicial quanto a retomada após `interrupt()`.
+        config = {**config, **callbacks_config()}
         st.session_state.hitl_agent = agent
         st.session_state.hitl_config = config
         st.session_state.hitl_pending = None

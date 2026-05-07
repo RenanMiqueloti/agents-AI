@@ -238,7 +238,7 @@ LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_HOST=https://cloud.langfuse.com   # opcional (default: cloud Langfuse)
 ```
 
-Sem essas keys, os agentes funcionam idênticos. Com elas, todo `runnable.invoke(..., config=callbacks_config())` envia spans ao seu projeto Langfuse — instrumentado em `basic`, `memory`, `tool` e `rag`. O agente `hitl` ainda não está instrumentado por default (streaming + `interrupt()` exigem hook manual); o ponto de extensão é o helper [`callbacks_config`](agents/provider.py).
+Sem essas keys, os agentes funcionam idênticos. Com elas, todos os cinco agentes — `basic`, `memory`, `tool`, `rag` e `hitl` — emitem spans ao seu projeto Langfuse: as chains LCEL e os grafos LangGraph passam por [`callbacks_config()`](agents/provider.py); no caso do `hitl`, o mesmo config viaja com o `agent.stream(...)` inicial e com o `Command(resume=...)`, então a fase de aprovação humana também aparece como parte do trace.
 
 [Free tier do Langfuse →](https://langfuse.com)
 
@@ -273,13 +273,12 @@ O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingfac
 
 ## Design decisions
 
-**LangGraph em vez de CrewAI.** Reducer-based state management: cada nó declara explicitamente como atualiza o estado, e conflitos em execuções paralelas resolvem de forma determinística. CrewAI abstrai esse comportamento em alto nível — confortável em protótipos, fraco quando o requisito inclui audit trail e replay.
+A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/adr/) — formato ADR (Architecture Decision Record), com contexto, decisão, consequências e alternativas consideradas. Resumo:
 
-**`interrupt()` em vez de polling.** O `interrupt()` serializa o estado completo do grafo via checkpointer (`MemorySaver` em memória, `PostgresSaver` em produção) e retoma do ponto exato da pausa. Polling exigiria estado externo e re-execução parcial do grafo a cada checagem.
-
-**MCP server, e não só client.** Conectar um agente a um servidor MCP existente é o caminho comum; implementar o servidor (onde a integração customizada de fato vive) é menos coberto. Este repo cobre os dois lados — `mcp_server.py` expõe ferramentas via stdio e os agentes consomem MCP via LangGraph.
-
-**FAISS no RAG, e não Qdrant.** FAISS é embeddable (sem serviço externo) e suficiente para o caso aqui: corpus estático em `data/docs/`, índice em memória no startup, sem filtros nem escala horizontal. Mantém o quick-start em um único `pip install`. Quando o requisito inclui corpus dinâmico, retrieval híbrido e produção, o projeto irmão [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) usa Qdrant — a separação entre os dois repositórios é intencional.
+- **[ADR-0001](docs/adr/0001-langgraph-vs-crewai.md): LangGraph em vez de CrewAI** — reducer-based state management; cada nó declara explicitamente o delta no estado, e conflitos em execuções paralelas resolvem deterministicamente.
+- **[ADR-0002](docs/adr/0002-interrupt-vs-polling.md): `interrupt()` em vez de polling** — checkpointer serializa o grafo completo e retoma do ponto exato da pausa, sem re-executar o LLM.
+- **[ADR-0003](docs/adr/0003-mcp-server-and-client.md): MCP server além de cliente** — implementar o servidor é o lado menos coberto do protocolo; este repo demonstra os dois.
+- **[ADR-0004](docs/adr/0004-faiss-vs-qdrant.md): FAISS em vez de Qdrant** — embeddable é suficiente para corpus estático; Qdrant fica em [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) onde o requisito de produção justifica.
 
 ![Agente RAG respondendo grounded](rag_agentes.png)
 
@@ -307,7 +306,10 @@ O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingfac
 │   └── dataset.json              # 25 samples cobrindo todos os agentes
 ├── tests/test_smoke.py           # Smoke tests (AST-parse + factory imports)
 ├── data/docs/                    # Coloque seus .txt aqui para RAG agent + search_knowledge
-├── .github/workflows/ci.yml      # CI: ruff lint + format + pytest
+├── docs/adr/                     # Architecture Decision Records (formato Nygard)
+├── .github/
+│   ├── workflows/ci.yml          # CI: ruff lint + format + pytest
+│   └── dependabot.yml            # Bumps automáticos (pip · actions · docker)
 ├── Dockerfile                    # Multi-stage, roda Streamlit no runtime slim
 ├── docker-compose.yml            # app + serviço ollama opt-in via --profile ollama
 ├── .dockerignore
