@@ -13,7 +13,7 @@ langchain-anthropic>=0.3.0       # provider: claude  (requer ANTHROPIC_API_KEY)
 langchain-openai>=0.3.0          # provider: openai  (requer OPENAI_API_KEY)
 
 # LangGraph — agentes com ferramentas, HITL e checkpointing
-langgraph>=0.4.0
+langgraph>=1.1.10
 
 # Vetores locais (RAG agent)
 faiss-cpu>=1.8.0
