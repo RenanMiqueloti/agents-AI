@@ -25,7 +25,7 @@ mcp>=1.0.0
 langfuse>=3.0.0
 
 # API HTTP — endpoints stateless para os agentes basic / tool / rag
-fastapi>=0.115.0
+fastapi>=0.136.1
 uvicorn[standard]>=0.30.0
 
 # Variáveis de ambiente
