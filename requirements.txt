@@ -16,7 +16,7 @@ langchain-openai>=0.3.0          # provider: openai  (requer OPENAI_API_KEY)
 langgraph>=0.4.0
 
 # Vetores locais (RAG agent)
-faiss-cpu>=1.8.0
+faiss-cpu>=1.13.2
 
 # MCP server — protocolo universal de integração de agentes (2026)
 mcp>=1.0.0
