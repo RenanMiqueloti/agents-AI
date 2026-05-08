@@ -14,8 +14,8 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
+COPY requirements.txt requirements.lock ./
+RUN pip install --user -r requirements.lock
 
 # ── Runtime ────────────────────────────────────────────────────────────────
 FROM python:3.14-slim

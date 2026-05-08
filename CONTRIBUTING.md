@@ -14,8 +14,15 @@ Requisitos:
 git clone https://github.com/RenanMiqueloti/agents-AI.git
 cd agents-AI
 python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements.lock                     # versões pinadas (CI usa esta)
 pip install ruff pytest pytest-cov                   # ferramentas de dev
+```
+
+`requirements.txt` lista as dependências com constraints soltos (`>=`); `requirements.lock` é gerado por `pip-compile` e pina toda a árvore. CI e Docker instalam pelo lockfile. Para adicionar ou subir uma dependência, edite `requirements.txt` e regenere:
+
+```bash
+pip install pip-tools
+pip-compile --output-file=requirements.lock requirements.txt
 ```
 
 Para rodar o painel Streamlit ou os evals localmente, copie [`.env.example`](.env.example) para `.env` e preencha as keys dos providers que for usar.
