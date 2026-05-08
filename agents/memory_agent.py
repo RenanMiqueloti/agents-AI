@@ -68,7 +68,7 @@ def create_memory_agent(provider: Provider = "ollama") -> Callable[[str], str]:
 
     def run(prompt_text: str) -> str:
         config = {"configurable": {"session_id": "streamlit-session"}, **callbacks_config()}
-        result = chain_with_history.invoke({"input": prompt_text}, config=config)
+        result = chain_with_history.invoke({"input": prompt_text}, config=config)  # type: ignore[arg-type]
         return format_response(result)
 
     return run

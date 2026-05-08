@@ -80,7 +80,7 @@ def create_tool_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     agent = create_react_agent(llm, tools=[soma, data_hoje])
 
     def run(prompt: str) -> str:
-        result = agent.invoke(
+        result = agent.invoke(  # type: ignore[call-overload]
             {"messages": [("human", f"Responda em português e seja breve: {prompt}")]},
             config=callbacks_config(),
         )

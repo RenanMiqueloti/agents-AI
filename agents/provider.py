@@ -73,7 +73,7 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
         return ChatOpenAI(
             model=_OPENAI_MODEL,
             temperature=temperature,
-            api_key=api_key,
+            api_key=api_key,  # type: ignore[arg-type]
         )
 
     raise ValueError(f"Provider desconhecido: {provider!r}. Use 'ollama', 'claude' ou 'openai'.")
