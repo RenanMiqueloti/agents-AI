@@ -22,7 +22,7 @@ def format_response(result: object) -> str:
         Texto limpo terminado em ponto final.
     """
     if hasattr(result, "content"):
-        result = result.content  # type: ignore[union-attr]
+        result = result.content
     if isinstance(result, dict):
         for key in ("response", "result"):
             if key in result:

@@ -34,7 +34,7 @@ _EMBEDDING_MODEL = "nomic-embed-text"
 def format_response(result: object) -> str:
     """Limpa e trunca a resposta para no máximo 2 frases."""
     if hasattr(result, "content"):
-        result = result.content  # type: ignore[union-attr]
+        result = result.content
     text = str(result).replace("\n", " ").strip()
     sentences = text.split(". ")
     short = ". ".join(sentences[:2]).strip()
