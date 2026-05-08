@@ -143,3 +143,63 @@ def test_list_tools_returns_four_tools() -> None:
     tools = _run(mcp_server.list_tools())
     names = {t.name for t in tools}
     assert names == {"get_current_datetime", "calculate", "search_knowledge", "count_tokens"}
+
+
+# ── _get_vectorstore caching ───────────────────────────────────────────────
+
+
+def test_get_vectorstore_caches_after_first_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Segunda chamada reutiliza o vectorstore construído na primeira."""
+    builds = {"count": 0}
+    sentinel = object()
+
+    def _fake_build() -> object:
+        builds["count"] += 1
+        return sentinel
+
+    monkeypatch.setattr(mcp_server, "_build_vectorstore", _fake_build)
+    monkeypatch.setattr(mcp_server, "_vectorstore", None)
+    monkeypatch.setattr(mcp_server, "_vectorstore_error", None)
+
+    assert mcp_server._get_vectorstore() is sentinel
+    assert mcp_server._get_vectorstore() is sentinel
+    assert builds["count"] == 1
+
+
+def test_get_vectorstore_caches_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Falha na 1ª build é cacheada — não tenta construir de novo."""
+    builds = {"count": 0}
+
+    def _fake_failing_build() -> object:
+        builds["count"] += 1
+        raise FileNotFoundError("data/docs ausente")
+
+    monkeypatch.setattr(mcp_server, "_build_vectorstore", _fake_failing_build)
+    monkeypatch.setattr(mcp_server, "_vectorstore", None)
+    monkeypatch.setattr(mcp_server, "_vectorstore_error", None)
+
+    with pytest.raises(RuntimeError, match="Failed to build"):
+        mcp_server._get_vectorstore()
+    with pytest.raises(RuntimeError, match="Failed to build"):
+        mcp_server._get_vectorstore()
+
+    # Segunda chamada surface o erro cacheado sem retentar.
+    assert builds["count"] == 1
+
+
+def test_build_vectorstore_missing_dir(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """``_build_vectorstore`` com diretório inexistente levanta FileNotFoundError."""
+    monkeypatch.setattr(mcp_server, "_DOCS_DIR", tmp_path / "nonexistent")
+
+    with pytest.raises(FileNotFoundError, match="not found"):
+        mcp_server._build_vectorstore()
+
+
+def test_build_vectorstore_empty_dir(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """Diretório existe mas sem .txt → ValueError."""
+    empty_dir = tmp_path / "empty_docs"
+    empty_dir.mkdir()
+    monkeypatch.setattr(mcp_server, "_DOCS_DIR", empty_dir)
+
+    with pytest.raises(ValueError, match=r"No \.txt"):
+        mcp_server._build_vectorstore()

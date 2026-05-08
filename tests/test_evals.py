@@ -199,3 +199,170 @@ def test_make_hitl_adapter_safe_path_flagged_when_tool_fires(patched_get_llm) ->
     out = fn("Manda email para teste.")
 
     assert "FALHA" in out or "regressão" in out.lower()
+
+
+# ── build_agents_map ───────────────────────────────────────────────────────
+
+
+def test_build_agents_map_returns_seven_entries(
+    patched_get_llm, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``build_agents_map`` instancia 4 agentes diretos + 3 adapters HITL."""
+    import agents.rag_agent as rag_mod
+    from tests.fakes import FakeEmbeddings
+
+    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: FakeEmbeddings())
+
+    from evals.evaluate import build_agents_map
+
+    agents_map = build_agents_map("ollama")
+
+    assert set(agents_map.keys()) == {
+        "basic",
+        "tool",
+        "memory",
+        "rag",
+        "hitl_approve",
+        "hitl_reject",
+        "hitl_safe",
+    }
+    for fn in agents_map.values():
+        assert callable(fn)
+
+
+# ── run_evals (smoke end-to-end com tudo mockado) ──────────────────────────
+
+
+def test_run_evals_writes_results_file(
+    patched_get_llm,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """Roda ``run_evals`` contra dataset minúsculo com judge mockado."""
+    import json as _json
+
+    import evals.evaluate as evals_mod
+    from tests.fakes import FakeChatModel
+
+    tiny_dataset = [
+        {
+            "id": "tiny-1",
+            "agent": "basic",
+            "prompt": "Olá!",
+            "expected_themes": "saudação",
+        }
+    ]
+    fake_dataset_path = tmp_path / "tiny_dataset.json"
+    fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
+    fake_results_path = tmp_path / "tiny_results.json"
+
+    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    import agents.rag_agent as rag_mod
+    from tests.fakes import FakeEmbeddings as _FakeEmb
+
+    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+
+    monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
+    monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
+
+    fake_llm = patched_get_llm
+    fake_llm.responses = [AIMessage(content="Olá! Como posso ajudar?")]
+
+    judge_fake = FakeChatModel()
+    judge_fake.responses = [
+        AIMessage(
+            content='{"correctness": 4, "helpfulness": 5, "conciseness": 5, "reasoning": "ok"}'
+        )
+    ]
+    monkeypatch.setattr(evals_mod, "ChatOpenAI", lambda **kwargs: judge_fake)
+
+    results = evals_mod.run_evals(provider="ollama")
+
+    assert len(results) == 1
+    entry = results[0]
+    assert entry["id"] == "tiny-1"
+    assert entry["agent"] == "basic"
+    assert entry["scores"]["correctness"] == 4
+
+    assert fake_results_path.exists()
+    payload = _json.loads(fake_results_path.read_text(encoding="utf-8"))
+    assert payload["summary"]["n"] == 1
+    assert payload["summary"]["provider"] == "ollama"
+    assert payload["summary"]["avg_correctness"] == 4
+    assert len(payload["results"]) == 1
+
+
+def test_run_evals_skips_unknown_agent(
+    patched_get_llm,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Dataset com agent desconhecido faz skip sem quebrar."""
+    import json as _json
+
+    import evals.evaluate as evals_mod
+    from tests.fakes import FakeChatModel
+
+    tiny_dataset = [{"id": "skip-me", "agent": "nonexistent_agent", "prompt": "x"}]
+    fake_dataset_path = tmp_path / "skip_dataset.json"
+    fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
+    fake_results_path = tmp_path / "skip_results.json"
+
+    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    import agents.rag_agent as rag_mod
+    from tests.fakes import FakeEmbeddings as _FakeEmb
+
+    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+
+    monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
+    monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
+
+    judge_fake = FakeChatModel()
+    monkeypatch.setattr(evals_mod, "ChatOpenAI", lambda **kwargs: judge_fake)
+
+    results = evals_mod.run_evals(provider="ollama")
+
+    assert results == []
+    captured = capsys.readouterr()
+    assert "SKIP" in captured.out or "desconhecido" in captured.out
+
+
+def test_run_evals_handles_agent_exception(
+    patched_get_llm,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """Se o agente levanta, ``run_evals`` registra ``ERROR: ...`` na resposta."""
+    import json as _json
+
+    import evals.evaluate as evals_mod
+    from tests.fakes import FakeChatModel
+
+    tiny_dataset = [{"id": "boom", "agent": "basic", "prompt": "x"}]
+    fake_dataset_path = tmp_path / "boom_dataset.json"
+    fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
+    fake_results_path = tmp_path / "boom_results.json"
+
+    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    import agents.rag_agent as rag_mod
+    from tests.fakes import FakeEmbeddings as _FakeEmb
+
+    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+
+    monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
+    monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
+
+    # patched_get_llm tem responses=[] → FakeChatModel levanta RuntimeError ao invocar
+    judge_fake = FakeChatModel()
+    judge_fake.responses = [
+        AIMessage(
+            content='{"correctness": 1, "helpfulness": 1, "conciseness": 1, "reasoning": "erro"}'
+        )
+    ]
+    monkeypatch.setattr(evals_mod, "ChatOpenAI", lambda **kwargs: judge_fake)
+
+    results = evals_mod.run_evals(provider="ollama")
+
+    assert len(results) == 1
+    assert results[0]["answer"].startswith("ERROR:")
