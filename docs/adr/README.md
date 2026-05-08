@@ -8,3 +8,4 @@ Cada arquivo deste diretório registra uma decisão técnica do `agents-AI` no f
 | [0002](0002-interrupt-vs-polling.md) | `interrupt()` para Human-in-the-Loop, em vez de polling | Accepted |
 | [0003](0003-mcp-server-and-client.md) | Implementar servidor MCP custom além de consumir | Accepted |
 | [0004](0004-faiss-vs-qdrant.md) | FAISS no agente RAG; Qdrant fica em projeto irmão | Accepted |
+| [0005](0005-streamlit-vs-gradio-reflex.md) | Streamlit como UI do painel (vs Gradio, Reflex) | Accepted |
