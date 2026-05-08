@@ -14,6 +14,20 @@ import pytest
 from tests.fakes import FakeChatModel, FakeEmbeddings
 
 
+@pytest.fixture(autouse=True)
+def _reset_settings_cache() -> Iterator[None]:
+    """Limpa o LRU cache de ``get_settings`` em cada teste.
+
+    Sem isso, a primeira leitura de env var é congelada e ``monkeypatch.setenv``
+    não tem efeito em chamadas subsequentes a ``get_settings()``.
+    """
+    from agents.settings import get_settings
+
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 @pytest.fixture
 def fake_llm() -> FakeChatModel:
     """``FakeChatModel`` com fila vazia, pronto pra ser preenchido."""
@@ -55,12 +69,3 @@ def patched_get_llm(
     monkeypatch.setattr(hitl_mod, "get_llm", _fake_get_llm)
 
     yield fake_llm
-
-
-@pytest.fixture
-def reset_memory_store(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict]:
-    """Limpa o ``_store`` do memory_agent entre testes pra evitar bleed."""
-    import agents.memory_agent as memory_mod
-
-    monkeypatch.setattr(memory_mod, "_store", {})
-    yield memory_mod._store

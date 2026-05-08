@@ -1,8 +1,10 @@
-"""Agente com ferramentas usando ``create_react_agent`` do LangGraph.
+"""Agente com ferramentas usando ``create_agent`` do LangChain 1.x.
 
-Padrão atual: ``create_react_agent`` do ``langgraph.prebuilt`` com
-``@tool`` decorators e schemas Pydantic. Multi-provider via
-:func:`agents.provider.get_llm`.
+Padrão atual (LangChain 1.x): ``langchain.agents.create_agent`` com
+``@tool`` decorators e schemas Pydantic. Substitui o
+``langgraph.prebuilt.create_react_agent`` deprecated em LangGraph 1.0.
+
+Multi-provider via :func:`agents.provider.get_llm`.
 
 Ferramentas expostas:
 - :func:`soma` — soma dois números (``SomaInput``).
@@ -14,8 +16,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import UTC, datetime
 
+from langchain.agents import create_agent
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
 
 from agents.provider import Provider, callbacks_config, get_llm
@@ -58,7 +60,7 @@ def data_hoje() -> str:
 def format_response(result: object) -> str:
     """Limpa e trunca a resposta para no máximo 2 frases."""
     if hasattr(result, "content"):
-        result = result.content  # type: ignore[union-attr]
+        result = result.content
     text = str(result).replace("\n", " ").strip()
     sentences = text.split(". ")
     short = ". ".join(sentences[:2]).strip()
@@ -77,11 +79,15 @@ def create_tool_agent(provider: Provider = "ollama") -> Callable[[str], str]:
         Callable que recebe um prompt e devolve a resposta formatada.
     """
     llm = get_llm(provider)
-    agent = create_react_agent(llm, tools=[soma, data_hoje])
+    agent = create_agent(
+        llm,
+        tools=[soma, data_hoje],
+        system_prompt="Responda em português e seja breve.",
+    )
 
     def run(prompt: str) -> str:
         result = agent.invoke(  # type: ignore[call-overload]
-            {"messages": [("human", f"Responda em português e seja breve: {prompt}")]},
+            {"messages": [("human", prompt)]},
             config=callbacks_config(),
         )
         last_msg = result["messages"][-1]

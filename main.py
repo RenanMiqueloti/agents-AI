@@ -92,6 +92,9 @@ if "hitl_thread_id" not in st.session_state:
     # Cada sessão Streamlit tem seu próprio thread_id no MemorySaver, evitando
     # que dois usuários simultâneos colidam no mesmo estado HITL pendente.
     st.session_state.hitl_thread_id = f"hitl-{uuid.uuid4()}"
+if "memory_thread_id" not in st.session_state:
+    # Mesmo padrão pro agente com memória — cada usuário tem seu próprio histórico.
+    st.session_state.memory_thread_id = f"memory-{uuid.uuid4()}"
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +107,7 @@ def get_agent(agent_name: str, prov: Provider):
     if agent_name == "Básico":
         return create_basic_agent(prov)
     if agent_name == "Com Memória":
-        return create_memory_agent(prov)
+        return create_memory_agent(prov, thread_id=st.session_state.memory_thread_id)
     if agent_name == "Com Ferramentas":
         return create_tool_agent(prov)
     if agent_name == "RAG (Documentos)":
@@ -280,7 +283,12 @@ else:
                     cols = st.columns(4)
                     agents_to_compare = [
                         ("Básico", create_basic_agent(provider)),
-                        ("Com Memória", create_memory_agent(provider)),
+                        (
+                            "Com Memória",
+                            create_memory_agent(
+                                provider, thread_id=st.session_state.memory_thread_id
+                            ),
+                        ),
                         ("Com Ferramentas", create_tool_agent(provider)),
                         ("RAG (Documentos)", create_rag_agent(provider)),
                     ]
