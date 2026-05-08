@@ -9,3 +9,4 @@ Cada arquivo deste diretório registra uma decisão técnica do `agents-AI` no f
 | [0003](0003-mcp-server-and-client.md) | Implementar servidor MCP custom além de consumir | Accepted |
 | [0004](0004-faiss-vs-qdrant.md) | FAISS no agente RAG; Qdrant fica em projeto irmão | Accepted |
 | [0005](0005-streamlit-vs-gradio-reflex.md) | Streamlit como UI do painel (vs Gradio, Reflex) | Accepted |
+| [0006](0006-test-strategy.md) | Estratégia de teste — `FakeChatModel` scriptado + matrix CI | Accepted |

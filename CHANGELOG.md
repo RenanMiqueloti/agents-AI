@@ -6,18 +6,30 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Em desenvolvimento na branch `feat/sprint-6` — alvo `v0.5.0`.
+Em desenvolvimento na branch `feat/sprint-7` — alvo `v0.6.0`.
 
 ### Added
-- **ADR-0005:** Streamlit como UI do painel — comparação com Gradio e Reflex em `docs/adr/0005-streamlit-vs-gradio-reflex.md`.
-- **`requirements.lock`:** lockfile pinado gerado via `pip-compile`. CI e Docker passam a instalar pelo lockfile; `requirements.txt` continua como fonte de constraints soltos.
-- **Coverage badge** no topo do README.
+- **`tests/fakes.py`:** `FakeChatModel` (scripted), `FakeEmbeddings` (determinísticas via hash) e `make_fake_retriever`. Substituem providers reais sem mock granular.
+- **`tests/conftest.py`:** fixtures `fake_llm`, `patched_get_llm`, `reset_memory_store`.
+- **Suíte de testes de comportamento** cobrindo todos os agentes, MCP server, API e harness de evals: `test_basic_agent.py`, `test_memory_agent.py`, `test_tool_agent.py`, `test_rag_agent.py`, `test_hitl_agent.py`, `test_mcp_tools.py`, `test_api_endpoints.py`, `test_evals.py`.
+- **Job mypy no CI** sobre `agents/`, `api/` e `mcp_server.py`.
+- **CI matrix Python 3.11/3.12/3.13** num job de compatibilidade adicional (job locked continua em 3.14 com `requirements.lock`).
+- **`.pre-commit-config.yaml`** com ruff + ruff-format + mypy + checks padrão.
+- **ADR-0006:** estratégia de teste com `FakeChatModel` scriptado + matrix CI.
 
 ### Changed
-- **CI e Docker** instalam dependências via `requirements.lock` em vez de `requirements.txt`.
-- **Coverage gate:** `pytest --cov-fail-under=35` (floor 2 pontos abaixo do baseline 37%) bloqueia regressão.
-- **CONTRIBUTING.md** documenta o fluxo `requirements.txt` → `pip-compile` → `requirements.lock`.
-- **Badges do README:** Python `3.12` → `3.14`, LangGraph `0.4+` → `1.1+`.
+- **Coverage gate:** `--cov-fail-under` de `35` → `70` no job locked. Baseline real medido localmente: 79%.
+- **CI restruturado** em quatro jobs: `lint`, `mypy`, `test-locked` (3.14 + lock + cov gate 70) e `test-compat` (matrix 3.11/3.12/3.13 com `requirements.txt` solto).
+- **README:** badge de coverage 79% (yellowgreen) e seção "Design decisions" linka ADR-0006.
+- **CONTRIBUTING.md** documenta pre-commit + mypy.
+
+### Tech debt registrado (não corrigido nesta sprint)
+- `agents/memory_agent.py` usa `RunnableWithMessageHistory` deprecated em LangChain 1.x. Migração natural: LangGraph persistence.
+- `agents/tool_agent.py` usa `langgraph.prebuilt.create_react_agent` deprecated em LangGraph 1.0. Caminho oficial: `from langchain.agents import create_agent`.
+
+## [0.5.0] — pendente de PR #17
+
+Sprint 6 (PR #17, ainda em revisão). Será movida pra `[0.5.0]` quando o PR for mergeado.
 
 ## [0.4.0] — 2026-05-08
 
