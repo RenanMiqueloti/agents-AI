@@ -1,7 +1,7 @@
 # agents-AI
 
 ![CI](https://github.com/RenanMiqueloti/agents-AI/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/coverage-79%25-yellowgreen.svg)
+![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.14-blue.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.1+-276749.svg)
@@ -282,6 +282,7 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 - **[ADR-0004](docs/adr/0004-faiss-vs-qdrant.md): FAISS em vez de Qdrant** — embeddable é suficiente para corpus estático; Qdrant fica em [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) onde o requisito de produção justifica.
 - **[ADR-0005](docs/adr/0005-streamlit-vs-gradio-reflex.md): Streamlit em vez de Gradio/Reflex** — sidebar + multi-seção mapeia direto no Streamlit; `st.session_state` resolve isolamento por usuário no HITL; deploy free em HF Spaces e Streamlit Cloud.
 - **[ADR-0006](docs/adr/0006-test-strategy.md): Estratégia de teste — `FakeChatModel` scriptado** — fila de respostas pré-determinadas em vez de mock granular ou VCR; suporta `bind_tools` (no-op) para testar tool agents e o fluxo `interrupt() → Command(resume=...)` do HITL com `MemorySaver` real.
+- **[ADR-0007](docs/adr/0007-api-deprecation-migration.md): Migração off-deprecation** — `memory_agent` saiu de `RunnableWithMessageHistory` para `StateGraph` + `MemorySaver` + `thread_id`; `tool_agent` saiu de `langgraph.prebuilt.create_react_agent` para `langchain.agents.create_agent`.
 
 ![Agente RAG respondendo grounded](rag_agentes.png)
 

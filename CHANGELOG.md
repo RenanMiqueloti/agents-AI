@@ -9,23 +9,32 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Em desenvolvimento na branch `feat/sprint-7` — alvo `v0.6.0`.
 
 ### Added
-- **`tests/fakes.py`:** `FakeChatModel` (scripted), `FakeEmbeddings` (determinísticas via hash) e `make_fake_retriever`. Substituem providers reais sem mock granular.
-- **`tests/conftest.py`:** fixtures `fake_llm`, `patched_get_llm`, `reset_memory_store`.
-- **Suíte de testes de comportamento** cobrindo todos os agentes, MCP server, API e harness de evals: `test_basic_agent.py`, `test_memory_agent.py`, `test_tool_agent.py`, `test_rag_agent.py`, `test_hitl_agent.py`, `test_mcp_tools.py`, `test_api_endpoints.py`, `test_evals.py`.
-- **Job mypy no CI** sobre `agents/`, `api/` e `mcp_server.py`.
-- **CI matrix Python 3.11/3.12/3.13** num job de compatibilidade adicional (job locked continua em 3.14 com `requirements.lock`).
+- **`tests/fakes.py`:** `FakeChatModel` (scripted), `FakeEmbeddings` (determinísticas via hash) e `make_fake_retriever`.
+- **`tests/conftest.py`:** fixtures `fake_llm`, `fake_embeddings`, `patched_get_llm` + autouse `_reset_settings_cache`.
+- **Suíte comportamental** cobrindo agentes, MCP, API, evals e provider: `test_basic_agent.py`, `test_memory_agent.py`, `test_tool_agent.py`, `test_rag_agent.py`, `test_hitl_agent.py`, `test_mcp_tools.py`, `test_api_endpoints.py`, `test_evals.py`, `test_provider.py`.
+- **`tests/test_properties.py`:** 9 property-based tests via Hypothesis (comutatividade do `soma`, idempotência do `format_response`, fila do `FakeChatModel`).
+- **`agents/settings.py`:** `pydantic-settings` consolidando env vars (chaves de provider, Langfuse, modelos) com `SecretStr` e `lru_cache`.
+- **Job `mypy`** no CI cobrindo `agents/`, `api/`, `mcp_server.py`.
+- **CI matrix Python 3.11/3.12/3.13** em job de compatibilidade (locked continua em 3.14 + `requirements.lock`).
 - **`.pre-commit-config.yaml`** com ruff + ruff-format + mypy + checks padrão.
 - **ADR-0006:** estratégia de teste com `FakeChatModel` scriptado + matrix CI.
+- **ADR-0007:** migração off-deprecation (`RunnableWithMessageHistory` e `create_react_agent`).
 
 ### Changed
-- **Coverage gate:** `--cov-fail-under` de `35` → `70` no job locked. Baseline real medido localmente: 79%.
+- **`agents/memory_agent.py`:** migrado de `RunnableWithMessageHistory` para `StateGraph` + `MemorySaver` + `thread_id`. Em multi-tenancy, `main.py` agora passa `f"memory-{uuid.uuid4()}"` por sessão Streamlit.
+- **`agents/tool_agent.py`:** migrado de `langgraph.prebuilt.create_react_agent` para `langchain.agents.create_agent`. `system_prompt` virou argumento explícito do factory.
+- **`agents/provider.py`:** lê chaves e modelos de `Settings` em vez de `os.getenv` direto. `ChatAnthropic` agora recebe `model_name` (corrige aviso do mypy).
+- **`pyproject.toml` mypy:** habilitado `check_untyped_defs`, `no_implicit_optional`, `warn_redundant_casts`, `warn_unused_ignores`, `warn_no_return`.
+- **`requirements.txt`:** `langchain>=1.0.0` (era `>=0.3.0`) — ergonomia da API `create_agent`. Adicionado `pydantic-settings>=2.0.0`.
+- **Coverage gate:** `--cov-fail-under` de `35` → `70` no job locked. Baseline real local: **88%**.
 - **CI restruturado** em quatro jobs: `lint`, `mypy`, `test-locked` (3.14 + lock + cov gate 70) e `test-compat` (matrix 3.11/3.12/3.13 com `requirements.txt` solto).
-- **README:** badge de coverage 79% (yellowgreen) e seção "Design decisions" linka ADR-0006.
-- **CONTRIBUTING.md** documenta pre-commit + mypy.
+- **README:** badge de coverage 88% (brightgreen); seção "Design decisions" linka ADR-0006 e ADR-0007.
+- **CONTRIBUTING.md:** documenta pre-commit + mypy + fluxo `pip-compile`.
 
-### Tech debt registrado (não corrigido nesta sprint)
-- `agents/memory_agent.py` usa `RunnableWithMessageHistory` deprecated em LangChain 1.x. Migração natural: LangGraph persistence.
-- `agents/tool_agent.py` usa `langgraph.prebuilt.create_react_agent` deprecated em LangGraph 1.0. Caminho oficial: `from langchain.agents import create_agent`.
+### Removed
+- 5 `# type: ignore[union-attr]` em `agents/*.py` que eram defensivos antes do `check_untyped_defs`.
+- `# type: ignore[arg-type]` no `provider.py` substituídos por `SecretStr` real.
+- Função `_get_history` e dict global `_store` em `memory_agent.py` (estado agora é do checkpointer LangGraph).
 
 ## [0.5.0] — pendente de PR #17
 
