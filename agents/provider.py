@@ -1,9 +1,12 @@
 """Fábrica de LLMs por provider.
 
 Suporta três providers:
-- ``ollama``  — qwen3:8b local via Ollama (gratuito, sem API key)
-- ``claude``  — Claude Haiku 4.5 via Anthropic API (requer ANTHROPIC_API_KEY)
-- ``openai``  — GPT-5 mini via OpenAI API (requer OPENAI_API_KEY)
+- ``ollama``  — modelo local via Ollama (gratuito, sem API key)
+- ``claude``  — Claude via Anthropic API (requer ANTHROPIC_API_KEY)
+- ``openai``  — GPT via OpenAI API (requer OPENAI_API_KEY)
+
+As chaves e nomes de modelo vêm de :class:`agents.settings.Settings`,
+que carrega de ``.env`` automaticamente.
 
 Tracing (opt-in): se ``LANGFUSE_PUBLIC_KEY`` e ``LANGFUSE_SECRET_KEY``
 estiverem definidas, :func:`callbacks_config` retorna um ``RunnableConfig``
@@ -19,14 +22,11 @@ Usage::
 
 from __future__ import annotations
 
-import os
 from typing import Any, Literal
 
-Provider = Literal["ollama", "claude", "openai"]
+from agents.settings import get_settings
 
-_OLLAMA_MODEL = "qwen3:8b"
-_CLAUDE_MODEL = "claude-haiku-4-5-20251001"
-_OPENAI_MODEL = "gpt-5-mini"
+Provider = Literal["ollama", "claude", "openai"]
 
 
 def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
@@ -42,38 +42,40 @@ def get_llm(provider: Provider = "ollama", temperature: float = 0.0):
     Raises:
         ValueError: Se o provider for desconhecido ou a API key estiver ausente.
     """
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama  # type: ignore[import]
+    settings = get_settings()
 
-        return ChatOllama(model=_OLLAMA_MODEL, temperature=temperature)
+    if provider == "ollama":
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(model=settings.ollama_model, temperature=temperature)
 
     if provider == "claude":
-        from langchain_anthropic import ChatAnthropic  # type: ignore[import]
+        from langchain_anthropic import ChatAnthropic
 
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
+        if settings.anthropic_api_key is None:
             raise ValueError(
                 "ANTHROPIC_API_KEY não encontrada. "
                 "Crie um arquivo .env com ANTHROPIC_API_KEY=sk-ant-..."
             )
         return ChatAnthropic(
-            model=_CLAUDE_MODEL,
+            model_name=settings.claude_model,
             temperature=temperature,
-            api_key=api_key,
+            api_key=settings.anthropic_api_key,
+            timeout=None,
+            stop=None,
         )
 
     if provider == "openai":
-        from langchain_openai import ChatOpenAI  # type: ignore[import]
+        from langchain_openai import ChatOpenAI
 
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if settings.openai_api_key is None:
             raise ValueError(
                 "OPENAI_API_KEY não encontrada. Crie um arquivo .env com OPENAI_API_KEY=sk-..."
             )
         return ChatOpenAI(
-            model=_OPENAI_MODEL,
+            model=settings.openai_model,
             temperature=temperature,
-            api_key=api_key,  # type: ignore[arg-type]
+            api_key=settings.openai_api_key,
         )
 
     raise ValueError(f"Provider desconhecido: {provider!r}. Use 'ollama', 'claude' ou 'openai'.")
@@ -86,21 +88,22 @@ def _build_langfuse_callback() -> Any | None:
         Instância de ``CallbackHandler`` ou ``None`` se as keys não foram
         fornecidas ou o pacote ``langfuse`` não está instalado.
     """
-    if not (os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY")):
+    settings = get_settings()
+    if not (settings.langfuse_public_key and settings.langfuse_secret_key):
         return None
 
     try:
-        from langfuse.langchain import CallbackHandler  # type: ignore[import]
+        from langfuse.langchain import CallbackHandler
     except ImportError:
         try:
-            from langfuse.callback import CallbackHandler  # type: ignore[import]
+            from langfuse.callback import CallbackHandler
         except ImportError:
             return None
 
     return CallbackHandler(
-        public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
-        secret_key=os.environ["LANGFUSE_SECRET_KEY"],
-        host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+        public_key=settings.langfuse_public_key.get_secret_value(),
+        secret_key=settings.langfuse_secret_key.get_secret_value(),
+        host=settings.langfuse_host,
     )
 
 
