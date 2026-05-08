@@ -1,9 +1,10 @@
 # agents-AI
 
 ![CI](https://github.com/RenanMiqueloti/agents-AI/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-37%25-red.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.12-blue.svg)
-![LangGraph](https://img.shields.io/badge/LangGraph-0.4+-276749.svg)
+![Python](https://img.shields.io/badge/python-3.14-blue.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-1.1+-276749.svg)
 ![MCP](https://img.shields.io/badge/MCP-server-2b6cb0.svg)
 
 Painel Streamlit multi-agente com LangGraph 0.4+, HITL via `interrupt()` + `MemorySaver`, servidor MCP customizado e harness de evals com LLM-as-judge. Providers: Ollama, Claude e OpenAI.
@@ -279,6 +280,7 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 - **[ADR-0002](docs/adr/0002-interrupt-vs-polling.md): `interrupt()` em vez de polling** — checkpointer serializa o grafo completo e retoma do ponto exato da pausa, sem re-executar o LLM.
 - **[ADR-0003](docs/adr/0003-mcp-server-and-client.md): MCP server além de cliente** — implementar o servidor é o lado menos coberto do protocolo; este repo demonstra os dois.
 - **[ADR-0004](docs/adr/0004-faiss-vs-qdrant.md): FAISS em vez de Qdrant** — embeddable é suficiente para corpus estático; Qdrant fica em [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot) onde o requisito de produção justifica.
+- **[ADR-0005](docs/adr/0005-streamlit-vs-gradio-reflex.md): Streamlit em vez de Gradio/Reflex** — sidebar + multi-seção mapeia direto no Streamlit; `st.session_state` resolve isolamento por usuário no HITL; deploy free em HF Spaces e Streamlit Cloud.
 
 ![Agente RAG respondendo grounded](rag_agentes.png)
 
