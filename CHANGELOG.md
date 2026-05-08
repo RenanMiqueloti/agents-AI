@@ -6,23 +6,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Em desenvolvimento na branch `feat/sprint-4` — alvo `v0.3.0`.
+Em desenvolvimento na branch `feat/sprint-5` — alvo `v0.4.0`.
+
+### Changed
+- **Deps Python (majors):** `langchain-core` `>=0.3.0` → `>=1.3.3`, `langgraph` `>=0.4.0` → `>=1.1.10`, `langchain-text-splitters` `>=0.3.0` → `>=1.1.2`. As majors foram validadas em CI (smoke tests, lint, parsing) sob `pip install -r requirements.txt`.
+- **Deps Python (minors):** `fastapi` `>=0.115.0` → `>=0.136.1`, `faiss-cpu` `>=1.8.0` → `>=1.13.2`.
+- **Runtime Python:** `python:3.12-slim` → `python:3.14-slim` no `Dockerfile`. `python-version` no CI também subiu para `3.14` para evitar drift entre CI e imagem de produção. Floor declarado em `pyproject.toml` continua `>=3.11`.
+- **GitHub Actions:** `actions/checkout@v4` → `@v6` e `actions/setup-python@v5` → `@v6`.
+
+Os 8 PRs do Dependabot (#8–#15) foram consolidados em um único PR para evitar conflitos em cadeia em `requirements.txt` e `ci.yml`.
+
+## [0.3.0] — 2026-05-07
 
 ### Added
-- `CHANGELOG.md` neste formato.
-- `CONTRIBUTING.md` com guia de contribuição.
-- `.github/PULL_REQUEST_TEMPLATE.md` e `.github/ISSUE_TEMPLATE/` (bug + feature).
-- CI agora gera relatório de cobertura em XML (artifact `coverage.xml`).
-- Testes: cobertura unitária do `callbacks_config()` e do endpoint `/health` da API.
-
-## Pending review — branch `feat/sprint-3`
-
-Os itens abaixo já estão implementados e empurrados, mas ainda em PR aberto. Vão entrar nesta seção como `v0.3.0` quando o PR for mergeado.
-
-### Added
-- Tracing Langfuse end-to-end no agente HITL (cobre execução inicial e `Command(resume=...)` após `interrupt()`).
-- 4 ADRs no formato Nygard em `docs/adr/` (LangGraph vs CrewAI, `interrupt()` vs polling, MCP server além de cliente, FAISS vs Qdrant).
-- `.github/dependabot.yml` cobrindo pip (semanal), github-actions (mensal) e docker (mensal).
+- **Sprint 3 (PR #6):** Tracing Langfuse end-to-end no agente HITL (cobre execução inicial e `Command(resume=...)` após `interrupt()`).
+- **Sprint 3 (PR #6):** 4 ADRs no formato Nygard em `docs/adr/` (LangGraph vs CrewAI, `interrupt()` vs polling, MCP server além de cliente, FAISS vs Qdrant).
+- **Sprint 3 (PR #6):** `.github/dependabot.yml` cobrindo pip (semanal), github-actions (mensal) e docker (mensal).
+- **Sprint 4 (PR #7):** `CHANGELOG.md` neste formato.
+- **Sprint 4 (PR #7):** `CONTRIBUTING.md` com guia de contribuição.
+- **Sprint 4 (PR #7):** `.github/PULL_REQUEST_TEMPLATE.md` e `.github/ISSUE_TEMPLATE/` (bug + feature, blank issues desabilitadas).
+- **Sprint 4 (PR #7):** CI gera relatório de cobertura em XML (artifact `coverage.xml`, retenção 14 dias).
+- **Sprint 4 (PR #7):** Cobertura unitária do `callbacks_config()` e do endpoint `/health` da API.
 
 ### Changed
 - Seção "Design decisions" do README virou bullets que linkam para os ADRs.
@@ -57,6 +61,7 @@ Os itens abaixo já estão implementados e empurrados, mas ainda em PR aberto. V
 - CI GitHub Actions com `ruff` (lint + format) e `pytest` (smoke tests).
 - `pyproject.toml` configurando ruff, pytest e mypy.
 
-[Unreleased]: https://github.com/RenanMiqueloti/agents-AI/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/RenanMiqueloti/agents-AI/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.3.0
 [0.2.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.2.0
 [0.1.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.1.0
