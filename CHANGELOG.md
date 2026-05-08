@@ -6,15 +6,28 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Em desenvolvimento na branch `feat/sprint-5` — alvo `v0.4.0`.
+Em desenvolvimento na branch `feat/sprint-6` — alvo `v0.5.0`.
+
+### Added
+- **ADR-0005:** Streamlit como UI do painel — comparação com Gradio e Reflex em `docs/adr/0005-streamlit-vs-gradio-reflex.md`.
+- **`requirements.lock`:** lockfile pinado gerado via `pip-compile`. CI e Docker passam a instalar pelo lockfile; `requirements.txt` continua como fonte de constraints soltos.
+- **Coverage badge** no topo do README.
 
 ### Changed
-- **Deps Python (majors):** `langchain-core` `>=0.3.0` → `>=1.3.3`, `langgraph` `>=0.4.0` → `>=1.1.10`, `langchain-text-splitters` `>=0.3.0` → `>=1.1.2`. As majors foram validadas em CI (smoke tests, lint, parsing) sob `pip install -r requirements.txt`.
+- **CI e Docker** instalam dependências via `requirements.lock` em vez de `requirements.txt`.
+- **Coverage gate:** `pytest --cov-fail-under=35` (floor 2 pontos abaixo do baseline 37%) bloqueia regressão.
+- **CONTRIBUTING.md** documenta o fluxo `requirements.txt` → `pip-compile` → `requirements.lock`.
+- **Badges do README:** Python `3.12` → `3.14`, LangGraph `0.4+` → `1.1+`.
+
+## [0.4.0] — 2026-05-08
+
+### Changed
+- **Deps Python (majors):** `langchain-core` `>=0.3.0` → `>=1.3.3`, `langgraph` `>=0.4.0` → `>=1.1.10`, `langchain-text-splitters` `>=0.3.0` → `>=1.1.2`.
 - **Deps Python (minors):** `fastapi` `>=0.115.0` → `>=0.136.1`, `faiss-cpu` `>=1.8.0` → `>=1.13.2`.
-- **Runtime Python:** `python:3.12-slim` → `python:3.14-slim` no `Dockerfile`. `python-version` no CI também subiu para `3.14` para evitar drift entre CI e imagem de produção. Floor declarado em `pyproject.toml` continua `>=3.11`.
+- **Runtime Python:** `python:3.12-slim` → `python:3.14-slim` no `Dockerfile`. `python-version` no CI também subiu para `3.14`.
 - **GitHub Actions:** `actions/checkout@v4` → `@v6` e `actions/setup-python@v5` → `@v6`.
 
-Os 8 PRs do Dependabot (#8–#15) foram consolidados em um único PR para evitar conflitos em cadeia em `requirements.txt` e `ci.yml`.
+Sprint 5 consolidou 8 PRs do Dependabot (#8–#15) em um PR único (#16) para evitar conflitos em cadeia em `requirements.txt` e `ci.yml`.
 
 ## [0.3.0] — 2026-05-07
 
@@ -61,7 +74,8 @@ Os 8 PRs do Dependabot (#8–#15) foram consolidados em um único PR para evitar
 - CI GitHub Actions com `ruff` (lint + format) e `pytest` (smoke tests).
 - `pyproject.toml` configurando ruff, pytest e mypy.
 
-[Unreleased]: https://github.com/RenanMiqueloti/agents-AI/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/RenanMiqueloti/agents-AI/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.4.0
 [0.3.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.3.0
 [0.2.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.2.0
 [0.1.0]: https://github.com/RenanMiqueloti/agents-AI/releases/tag/v0.1.0
