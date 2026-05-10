@@ -6,7 +6,7 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
-Em desenvolvimento na branch `feat/sprint-7` — alvo `v0.6.0`.
+## [0.6.0] — 2026-05-10
 
 ### Added
 - **`tests/fakes.py`:** `FakeChatModel` (scripted), `FakeEmbeddings` (determinísticas via hash) e `make_fake_retriever`.
