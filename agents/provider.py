@@ -96,11 +96,11 @@ def _build_langfuse_callback() -> Any | None:
         from langfuse.langchain import CallbackHandler
     except ImportError:
         try:
-            from langfuse.callback import CallbackHandler
+            from langfuse.callback import CallbackHandler  # type: ignore[no-redef]
         except ImportError:
             return None
 
-    return CallbackHandler(
+    return CallbackHandler(  # type: ignore[call-arg]
         public_key=settings.langfuse_public_key.get_secret_value(),
         secret_key=settings.langfuse_secret_key.get_secret_value(),
         host=settings.langfuse_host,
