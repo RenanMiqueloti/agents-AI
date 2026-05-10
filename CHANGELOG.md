@@ -36,9 +36,18 @@ Em desenvolvimento na branch `feat/sprint-7` — alvo `v0.6.0`.
 - `# type: ignore[arg-type]` no `provider.py` substituídos por `SecretStr` real.
 - Função `_get_history` e dict global `_store` em `memory_agent.py` (estado agora é do checkpointer LangGraph).
 
-## [0.5.0] — pendente de PR #17
+## [0.5.0] — 2026-05-08
 
-Sprint 6 (PR #17, ainda em revisão). Será movida pra `[0.5.0]` quando o PR for mergeado.
+### Added
+- **ADR-0005:** Streamlit como UI do painel — comparação com Gradio e Reflex em `docs/adr/0005-streamlit-vs-gradio-reflex.md`.
+- **`requirements.lock`:** lockfile pinado gerado via `pip-compile`. CI e Docker passam a instalar pelo lockfile; `requirements.txt` continua como fonte de constraints soltos.
+- **Coverage badge** no topo do README.
+
+### Changed
+- **CI e Docker** instalam dependências via `requirements.lock` em vez de `requirements.txt`.
+- **Coverage gate:** `pytest --cov-fail-under=35` (floor 2 pontos abaixo do baseline 37%) bloqueia regressão.
+- **CONTRIBUTING.md** documenta o fluxo `requirements.txt` → `pip-compile` → `requirements.lock`.
+- **Badges do README:** Python `3.12` → `3.14`, LangGraph `0.4+` → `1.1+`.
 
 ## [0.4.0] — 2026-05-08
 
