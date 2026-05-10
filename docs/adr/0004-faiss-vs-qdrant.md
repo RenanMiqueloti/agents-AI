@@ -6,7 +6,7 @@ Accepted — 2026-05-07.
 
 ## Context
 
-O `agents-AI` tem um agente RAG (`rag_agent.py`) e o `mcp_server.py::search_knowledge`, ambos precisam de busca vetorial sobre os documentos em `data/docs/`. Em paralelo, o autor mantém um repositório irmão — `rag-chatbot` — focado especificamente em RAG de produção, com retrieval híbrido (BM25 + denso), re-ranking e corpus dinâmico. A questão é qual vector store usar em cada um.
+O `agents-AI` tem um agente RAG (`rag_agent.py`) e o `mcp_server.py::search_knowledge`, ambos precisam de busca vetorial sobre os documentos em `data/docs/`. Em paralelo, o autor mantém um repositório irmão — `rag-chatbot` — focado em RAG com retrieval híbrido (BM25 + denso), re-ranking e corpus dinâmico. A questão é qual vector store usar em cada um.
 
 Opções principais:
 
@@ -44,10 +44,10 @@ Opções principais:
 
 **Sem RAG, focar só em agentes**
 - *Por quê foi tentador:* RAG é tema grande e tem repo próprio (`rag-chatbot`).
-- *Por quê foi rejeitado:* o agente RAG aqui é deliberadamente **simples** — serve para mostrar o pattern LCEL com retrieval e como ele se compara aos outros agentes no painel "Comparar Todos". Não compete com o `rag-chatbot`, complementa.
+- *Por quê foi rejeitado:* o agente RAG aqui é **simples** — serve para mostrar o pattern LCEL com retrieval e como ele se compara aos outros agentes no painel "Comparar Todos". Não compete com o `rag-chatbot`, complementa.
 
 ## References
 
 - [FAISS — Facebook AI Similarity Search](https://faiss.ai/)
 - Implementação: [`agents/rag_agent.py`](../../agents/rag_agent.py), [`mcp_server.py`](../../mcp_server.py)
-- Projeto irmão para RAG produção: [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot)
+- Projeto irmão para RAG: [`rag-chatbot`](https://github.com/RenanMiqueloti/rag-chatbot)

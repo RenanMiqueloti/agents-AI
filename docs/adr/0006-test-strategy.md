@@ -8,7 +8,7 @@ Accepted — 2026-05-08.
 
 Até a Sprint 6 a suíte de testes tinha cobertura de 37% e era majoritariamente smoke (parsing AST + factories importáveis com `pytest.importorskip`). Isso pegava regressões grosseiras (commit truncado) mas não validava comportamento — qualquer mudança no fluxo de um agente, no router HITL ou no harness de evals podia passar verde.
 
-Para um repo que demonstra "padrões de produção", a ausência de teste de comportamento é incoerente. A pergunta era *como* testar agentes LLM sem:
+Para um repo que demonstra padrões de engenharia em torno de agentes LLM, a ausência de teste de comportamento é incoerente. A pergunta era *como* testar agentes LLM sem:
 
 1. **Network calls reais** — caros, flaky, exigem keys em CI.
 2. **Mocking pesado** — mock granular do `BaseChatModel` com `Mock(spec=...)` quebra ao primeiro upgrade do langchain-core.
@@ -30,7 +30,7 @@ Adotar **`FakeChatModel`** — um `BaseChatModel` real do LangChain com fila de 
 
 - **Determinismo total.** A mesma sequência de `responses` produz a mesma execução, então o teste afirma comportamento sem ruído de modelo.
 - **Custo zero em CI.** Nenhum teste consome token de Anthropic, OpenAI ou Ollama. As env vars `OPENAI_API_KEY=dummy` e `ANTHROPIC_API_KEY=dummy` no workflow são suficientes pra evitar `ValueError` em factories que só validam presença da key.
-- **Cobertura de fluxo HITL real.** O `MemorySaver` é o de verdade; o teste invoca `agent.invoke(initial)`, lê `state.tasks[0].interrupts`, e retoma com `Command(resume={"approved": True})`. Não é simulação — é o fluxo de produção com LLM scriptado.
+- **Cobertura de fluxo HITL real.** O `MemorySaver` é o de verdade; o teste invoca `agent.invoke(initial)`, lê `state.tasks[0].interrupts`, e retoma com `Command(resume={"approved": True})`. Não é simulação — é o fluxo real com LLM scriptado.
 - **`bind_tools` no-op.** O `FakeChatModel.bind_tools` devolve `self`, mantendo a fila intacta. As respostas já carregam `tool_calls` quando relevante; reproduzir o re-prompting de schemas que `bind_tools` faz no real não tem valor pra teste.
 - **Compatibilidade longeva.** Como `FakeChatModel` é um subclass de `BaseChatModel`, ele segue a evolução da API. Quando o langchain-core 2.x sair, o teste continua válido enquanto a interface central (`_generate`, `invoke`) for estável.
 
