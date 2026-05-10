@@ -59,7 +59,7 @@ Os testes usam `tests/fakes.py` (FakeChatModel scriptado) — não há network c
    - `test/...` — só testes
 2. **Conventional Commits.** Mensagens no formato `tipo(escopo): descrição`. O escopo é opcional mas recomendado quando ajuda (`feat(api):`, `fix(hitl-ui):`, `docs(adr):`).
 3. **Um commit, uma ideia.** Commits granulares facilitam o code review. PRs grandes são bem-vindos quando squash & merge resolve.
-4. **Descrição do PR.** Cubra _What_ (o que mudou), _Why_ (por que mudou) e _How to test_ (como verificar que funciona). O template de PR já tem essa estrutura.
+4. **Descrição do PR.** O suficiente pra alguém revisar: o que mudou, motivação se não óbvia, como verificar.
 5. **Vincule a issue** (se houver) com `Closes #N` no corpo do PR.
 
 ## Code style
