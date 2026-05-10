@@ -276,6 +276,7 @@ pydantic-core==2.46.4
     # via pydantic
 pydantic-settings==2.14.0
     # via
+    #   -r requirements.txt
     #   langchain-community
     #   mcp
 pydeck==0.9.2

@@ -89,7 +89,7 @@ def should_interrupt(state: HITLState) -> str:
     """
     last = state["messages"][-1]
     if not hasattr(last, "tool_calls") or not last.tool_calls:
-        return END  # type: ignore[return-value]
+        return END
     if any(tc["name"] in HIGH_IMPACT_TOOLS for tc in last.tool_calls):
         return "human_review"
     return "tools"
