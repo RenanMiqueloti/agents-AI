@@ -29,15 +29,24 @@ Para rodar o painel Streamlit ou os evals localmente, copie [`.env.example`](.en
 
 ## Rodando os checks antes do PR
 
-O CI roda exatamente os três comandos abaixo — rodar localmente antes de empurrar evita ciclos perdidos:
+O CI tem quatro jobs: `lint`, `mypy`, `test-locked` (3.14 com `requirements.lock`) e `test-compat` (matrix 3.11/3.12/3.13 com `requirements.txt` solto). Os comandos equivalentes rodam localmente como:
 
 ```bash
 ruff check .
 ruff format --check .
-pytest tests/ -v
+mypy agents api mcp_server.py
+pytest -v --cov=. --cov-fail-under=50 tests/
 ```
 
-A maior parte dos testes usa `pytest.importorskip` para deps pesadas (`langgraph`, `faiss`, `mcp`, `fastapi`); o subset que roda localmente é menor que o CI, mas ainda detecta erro de sintaxe, import circular e regressão nos helpers puros.
+Pra rodar tudo de uma vez via pre-commit:
+
+```bash
+pip install pre-commit
+pre-commit install         # instala o hook git
+pre-commit run --all-files
+```
+
+Os testes usam `tests/fakes.py` (FakeChatModel scriptado) — não há network call em CI. A maior parte ainda usa `pytest.importorskip` para deps pesadas (`langgraph`, `faiss`, `mcp`, `fastapi`); na ausência de `requirements.lock` instalado, esses testes pulam ao invés de falhar.
 
 ## Abrindo um Pull Request
 
