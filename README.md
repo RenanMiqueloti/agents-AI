@@ -3,11 +3,11 @@
 ![CI](https://github.com/RenanMiqueloti/agents-AI/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.14-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.1+-276749.svg)
 ![MCP](https://img.shields.io/badge/MCP-server-2b6cb0.svg)
 
-Painel Streamlit multi-agente com LangGraph 0.4+, HITL via `interrupt()` + `MemorySaver`, servidor MCP customizado e harness de evals com LLM-as-judge. Providers: Ollama, Claude e OpenAI.
+Painel Streamlit multi-agente com LangGraph 1.1+, HITL via `interrupt()` + `MemorySaver`, servidor MCP customizado e harness de evals com LLM-as-judge. Providers: Ollama, Claude e OpenAI.
 
 ![dashboard](dashboard_principal.png)
 
@@ -18,7 +18,7 @@ Painel Streamlit multi-agente com LangGraph 0.4+, HITL via `interrupt()` + `Memo
 ## Visão geral
 
 - **5 agentes** num único painel: básico, com memória, com ferramentas, RAG e HITL.
-- **HITL real** — `interrupt()` pausa o grafo, `MemorySaver` serializa o estado, `Command(resume=...)` retoma do ponto exato.
+- **HITL** — `interrupt()` pausa o grafo, `MemorySaver` serializa o estado, `Command(resume=...)` retoma do ponto exato.
 - **Servidor MCP** próprio em [`mcp_server.py`](mcp_server.py): 4 ferramentas via stdio, conectável a Claude Desktop, Claude Code ou qualquer cliente MCP.
 - **25 evals** com LLM-as-judge cobrindo todos os agentes, incluindo as três rotas do HITL (approve / reject / safe).
 - **Tracing opt-in** via Langfuse — três variáveis de ambiente, sem alterar código.
@@ -308,13 +308,25 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 ├── evals/
 │   ├── evaluate.py               # Harness LLM-as-judge + adapters HITL approve/reject/safe
 │   └── dataset.json              # 25 samples cobrindo todos os agentes
-├── tests/test_smoke.py           # Smoke + unit tests (callbacks_config, /health, parsing)
+├── tests/
+│   ├── conftest.py               # Fixtures: fake_llm, fake_embeddings, patched_get_llm
+│   ├── fakes.py                  # FakeChatModel scripted, FakeEmbeddings, make_fake_retriever
+│   ├── test_smoke.py             # Smoke (callbacks_config, parsing, imports)
+│   ├── test_basic_agent.py       # Comportamento do LCEL básico
+│   ├── test_memory_agent.py      # Histórico via StateGraph + MemorySaver
+│   ├── test_tool_agent.py        # ReAct + tool calls + Pydantic schemas
+│   ├── test_rag_agent.py         # LCEL RAG end-to-end com FakeEmbeddings
+│   ├── test_hitl_agent.py        # interrupt() + Command(resume=...)
+│   ├── test_mcp_tools.py         # 4 ferramentas MCP via stdio
+│   ├── test_api_endpoints.py     # /health + /agent/{name}
+│   ├── test_evals.py             # Harness LLM-as-judge + adapters HITL
+│   ├── test_provider.py          # Factory de LLM + callbacks
+│   └── test_properties.py        # 9 property-based tests via Hypothesis
 ├── data/docs/                    # Coloque seus .txt aqui para RAG agent + search_knowledge
 ├── docs/adr/                     # Architecture Decision Records (formato Nygard)
 ├── .github/
-│   ├── workflows/ci.yml          # CI: ruff lint + format + pytest + coverage XML artifact
+│   ├── workflows/ci.yml          # CI: lint + mypy + test-locked (3.14) + test-compat (3.11/3.12/3.13)
 │   ├── ISSUE_TEMPLATE/           # Bug report + feature request (forms YAML)
-│   ├── PULL_REQUEST_TEMPLATE.md  # What / Why / How to test + checklist
 │   └── dependabot.yml            # Bumps automáticos (pip · actions · docker)
 ├── CHANGELOG.md                  # Histórico de versões (Keep a Changelog)
 ├── CONTRIBUTING.md               # Guia de contribuição

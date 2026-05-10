@@ -1,6 +1,6 @@
 [project]
 name = "agents-ai"
-version = "0.1.0"
+version = "0.6.0"
 description = "Agentes LangGraph com HITL via interrupt(), MCP server custom e evals LLM-as-judge — multi-provider (Claude, OpenAI, Ollama)"
 readme = "README.md"
 license = { text = "MIT" }
