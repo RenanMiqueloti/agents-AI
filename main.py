@@ -1,4 +1,4 @@
-"""Dashboard Streamlit — IA Agents com múltiplos providers e padrões de produção."""
+"""Dashboard Streamlit — IA Agents com múltiplos providers."""
 
 import os
 import uuid
@@ -28,7 +28,7 @@ st.set_page_config(
 
 st.markdown(
     """
-# 🤖 IA Agents
+# IA Agents
 Painel pessoal para explorar e comparar agentes de IA com diferentes providers.
 Respostas curtas, limpas e diretas — com histórico e comparação lado a lado.
 """
@@ -50,7 +50,7 @@ provider: Provider = st.sidebar.selectbox(  # type: ignore[assignment]
 )
 
 agent_type: str = st.sidebar.radio(
-    "🤖 Agente",
+    "Agente",
     [
         "Básico",
         "Com Memória",
@@ -306,9 +306,8 @@ else:
         st.divider()
         st.subheader("📜 Histórico")
         for entry in reversed(st.session_state.history[-10:]):
-            role_icon = "🧑" if entry["role"] == "user" else "🤖"
             st.markdown(
-                f"{role_icon} **{entry['role'].title()}** "
+                f"**{entry['role'].title()}** "
                 f"<small>({entry.get('agent', '')})</small>",
                 unsafe_allow_html=True,
             )
