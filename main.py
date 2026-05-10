@@ -307,8 +307,7 @@ else:
         st.subheader("📜 Histórico")
         for entry in reversed(st.session_state.history[-10:]):
             st.markdown(
-                f"**{entry['role'].title()}** "
-                f"<small>({entry.get('agent', '')})</small>",
+                f"**{entry['role'].title()}** <small>({entry.get('agent', '')})</small>",
                 unsafe_allow_html=True,
             )
             st.write(entry["content"])
