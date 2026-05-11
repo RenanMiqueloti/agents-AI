@@ -29,7 +29,7 @@ fastapi>=0.136.1
 uvicorn[standard]>=0.30.0
 
 # Variáveis de ambiente — pydantic-settings consolida env vars com validação
-python-dotenv>=1.0.0
+python-dotenv>=1.2.2
 pydantic-settings>=2.0.0
 
 # Utilitários
