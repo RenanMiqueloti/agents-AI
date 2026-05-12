@@ -19,7 +19,7 @@ langgraph>=1.1.10
 faiss-cpu>=1.13.2
 
 # MCP server — protocolo universal de integração de agentes (2026)
-mcp>=1.0.0
+mcp>=1.27.1
 
 # Observabilidade (opt-in via env vars LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY)
 langfuse>=3.0.0
