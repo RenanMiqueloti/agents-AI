@@ -10,7 +10,7 @@ langchain-text-splitters>=1.1.2
 # Providers — instale apenas o(s) que for usar
 langchain-ollama>=0.2.0          # provider: ollama (local, gratuito)
 langchain-anthropic>=0.3.0       # provider: claude  (requer ANTHROPIC_API_KEY)
-langchain-openai>=0.3.0          # provider: openai  (requer OPENAI_API_KEY)
+langchain-openai>=1.2.1          # provider: openai  (requer OPENAI_API_KEY)
 
 # LangGraph — agentes com ferramentas, HITL e checkpointing
 langgraph>=1.1.10
