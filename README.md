@@ -75,8 +75,9 @@ Para rodar com Ollama localmente:
 
 ```bash
 ollama pull qwen3:8b           # chat model
-ollama pull nomic-embed-text   # embeddings do agente RAG
 ```
+
+Os embeddings do agente RAG e da tool `search_knowledge` do MCP rodam via `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (CPU, ~120MB baixados na primeira chamada). Sem dependência de Ollama pra embeddings.
 
 Comandos principais:
 
@@ -175,7 +176,7 @@ Implementação em [`agents/hitl_agent.py`](agents/hitl_agent.py); UI integrada 
 |---|---|
 | `get_current_datetime` | Data/hora UTC em ISO 8601 |
 | `calculate` | Avalia expressões matemáticas com namespace restrito |
-| `search_knowledge` | Busca semântica em `data/docs/` (FAISS in-memory + `nomic-embed-text` via Ollama; lazy init na 1ª call) |
+| `search_knowledge` | Busca semântica em `data/docs/` (FAISS in-memory + sentence-transformers multilingual; lazy init na 1ª call) |
 | `count_tokens` | Estimativa de tokens em um texto |
 
 ```bash
@@ -205,7 +206,7 @@ Para conectar ao Claude Desktop, edite `claude_desktop_config.json`:
 | `claude` | `claude-haiku-4-5-20251001` | `ANTHROPIC_API_KEY` no `.env` |
 | `openai` | `gpt-5-mini` | `OPENAI_API_KEY` no `.env` |
 
-Os defaults estão em três constantes no topo de [`agents/provider.py`](agents/provider.py) — trocar é uma linha. O agente RAG usa Ollama (`nomic-embed-text`) para embeddings independentemente do chat model escolhido.
+Os defaults estão em três constantes no topo de [`agents/provider.py`](agents/provider.py) — trocar é uma linha. O agente RAG usa `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` para embeddings independentemente do chat model escolhido.
 
 ---
 
@@ -268,7 +269,7 @@ O painel Streamlit roda no [free tier do Hugging Face Spaces](https://huggingfac
 4. Em **Settings → Variables and secrets**, adicione `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` e opcionalmente `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`.
 5. Aguarde o build (~3-5 min). O Space fica em `huggingface.co/spaces/{seu-user}/agents-AI`.
 
-> **Limitação:** Ollama não roda em Spaces free — selecione `claude` ou `openai` na sidebar quando estiver hospedado. A versão local com `streamlit run main.py` continua suportando os três providers.
+> **Limitação:** Ollama não roda em Spaces free — selecione `claude` ou `openai` na sidebar quando estiver hospedado. A versão local com `streamlit run main.py` continua suportando os três providers. O agente RAG funciona em qualquer cenário porque os embeddings rodam via `sentence-transformers` em CPU.
 
 ---
 
@@ -301,7 +302,7 @@ A justificativa completa de cada escolha técnica está em [`docs/adr/`](docs/ad
 │   ├── basic_agent.py            # LCEL chain simples
 │   ├── memory_agent.py           # RunnableWithMessageHistory
 │   ├── tool_agent.py             # LangGraph ReAct + tools com Pydantic schemas
-│   ├── rag_agent.py              # LCEL RAG + FAISS + nomic-embed-text
+│   ├── rag_agent.py              # LCEL RAG + FAISS + sentence-transformers
 │   └── hitl_agent.py             # LangGraph interrupt() + MemorySaver
 ├── api/
 │   └── server.py                 # FastAPI: POST /agent/{basic,tool,rag}

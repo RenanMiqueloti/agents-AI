@@ -6,7 +6,7 @@ agente compatível pode consumir — incluindo o painel agents-AI.
 Ferramentas expostas:
     get_current_datetime  — data e hora atual em ISO 8601
     calculate             — avaliação segura de expressões matemáticas
-    search_knowledge      — busca semântica em data/docs/ (FAISS + nomic-embed-text)
+    search_knowledge      — busca semântica em data/docs/ (FAISS + sentence-transformers)
     count_tokens          — estimativa de tokens em um texto
 
 Uso:
@@ -20,7 +20,6 @@ apontando para:
 
 Dependências:
     pip install -r requirements.txt
-    ollama pull nomic-embed-text   # para search_knowledge
 
 Referência: https://modelcontextprotocol.io/docs/concepts/servers
 """
@@ -47,19 +46,19 @@ except ImportError:
 # ── Knowledge base (FAISS over data/docs/) ────────────────────────────────
 
 _DOCS_DIR = Path(__file__).parent / "data" / "docs"
-_EMBEDDING_MODEL = "nomic-embed-text"
+_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-# Lazy-initialized on the first ``search_knowledge`` call so a missing
-# Ollama daemon doesn't prevent the rest of the server from starting.
+# Lazy-initialized on the first ``search_knowledge`` call so the model
+# download and FAISS index build don't block server startup.
 _vectorstore: Any = None
 _vectorstore_error: str | None = None
 
 
 def _build_vectorstore() -> Any:
-    """Indexa data/docs/*.txt com FAISS e nomic-embed-text."""
+    """Indexa data/docs/*.txt com FAISS e sentence-transformers."""
     from langchain_community.document_loaders import TextLoader
     from langchain_community.vectorstores import FAISS
-    from langchain_ollama import OllamaEmbeddings
+    from langchain_huggingface import HuggingFaceEmbeddings
     from langchain_text_splitters import CharacterTextSplitter
 
     if not _DOCS_DIR.is_dir():
@@ -75,7 +74,7 @@ def _build_vectorstore() -> Any:
     splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(documents)
 
-    embeddings = OllamaEmbeddings(model=_EMBEDDING_MODEL)
+    embeddings = HuggingFaceEmbeddings(model_name=_EMBEDDING_MODEL)
     return FAISS.from_documents(chunks, embeddings)
 
 
@@ -92,8 +91,8 @@ def _get_vectorstore() -> Any:
     except Exception as exc:
         _vectorstore_error = (
             f"Failed to build knowledge base: {exc}. "
-            f"Ensure Ollama is running and `ollama pull {_EMBEDDING_MODEL}` is done, "
-            f"and that {_DOCS_DIR} contains .txt documents."
+            f"Ensure {_DOCS_DIR} contains .txt documents and the embedding "
+            f"model {_EMBEDDING_MODEL!r} can be downloaded from Hugging Face."
         )
         raise RuntimeError(_vectorstore_error) from exc
     return _vectorstore
@@ -140,7 +139,7 @@ if _MCP_AVAILABLE:
                 name="search_knowledge",
                 description=(
                     "Semantic search over the local knowledge base in data/docs/. "
-                    "Uses FAISS in-memory + nomic-embed-text via Ollama. "
+                    "Uses FAISS in-memory + sentence-transformers multilingual embeddings. "
                     "Drop new .txt files in data/docs/ to extend the corpus; the index "
                     "is built lazily on the first call."
                 ),

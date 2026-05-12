@@ -23,8 +23,9 @@ Opções principais:
 
 **Vantagens**
 - **Quick-start em um único `pip install`**. Sem `docker compose` extra, sem container Qdrant, sem persistência a configurar. Quem clona o repo consegue rodar o RAG localmente em minutos.
-- **Simetria com `nomic-embed-text`** (também via Ollama) — a stack inteira do RAG roda local.
+- **Embeddings sem serviço externo** — `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` roda em CPU dentro do próprio processo, sem Ollama nem API paga. Modelo (~120MB) baixa do Hugging Face Hub na primeira chamada e fica cacheado.
 - **Determinismo da indexação** — o índice é construído no startup, não há estado externo a sincronizar.
+- **Deploy em HF Spaces free** — sem dependência de daemon Ollama, o RAG agent funciona idêntico no painel hospedado.
 - O caso de uso aqui (corpus estático em `data/docs/`, índice em memória, sem filtros nem TTL) é exatamente onde FAISS brilha.
 
 **Desvantagens**

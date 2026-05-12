@@ -118,14 +118,14 @@ def test_search_knowledge_returns_error_json_on_failure(monkeypatch: pytest.Monk
     """Se o vectorstore falha, a tool devolve um JSON com chave ``error``."""
 
     def _broken() -> None:
-        raise RuntimeError("Ollama offline")
+        raise RuntimeError("embedding model download failed")
 
     monkeypatch.setattr(mcp_server, "_get_vectorstore", _broken)
 
     result = _run(mcp_server.call_tool("search_knowledge", {"query": "x"}))
     payload = json.loads(result[0].text)
     assert "error" in payload
-    assert "Ollama" in payload["error"]
+    assert "embedding" in payload["error"]
 
 
 # ── unknown tool ───────────────────────────────────────────────────────────

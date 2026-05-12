@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:8b"
     claude_model: str = "claude-haiku-4-5-20251001"
     openai_model: str = "gpt-5-mini"
-    embedding_model: str = "nomic-embed-text"
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 
 @lru_cache(maxsize=1)

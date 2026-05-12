@@ -3,13 +3,10 @@
 Pipeline: carregar docs → chunkar → embedar → indexar (FAISS) → retriever
 top-3 → prompt → LLM → ``StrOutputParser``.
 
-Embeddings: ``nomic-embed-text`` via Ollama (768 dim, dedicado a embeddings,
-muito mais rápido que usar um modelo de chat). Chat model: configurável
-via :func:`agents.provider.get_llm` (ollama / claude / openai).
-
-Pré-requisito local::
-
-    ollama pull nomic-embed-text
+Embeddings: ``sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2``
+via ``langchain-huggingface`` (384 dim, multilingual, ~120MB, roda em CPU
+sem dependência externa). Chat model: configurável via
+:func:`agents.provider.get_llm` (ollama / claude / openai).
 """
 
 from __future__ import annotations
@@ -23,12 +20,12 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
 from agents.provider import Provider, callbacks_config, get_llm
 
-_EMBEDDING_MODEL = "nomic-embed-text"
+_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def format_response(result: object) -> str:
@@ -64,7 +61,8 @@ def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
 
     Args:
         provider: ``"ollama"``, ``"claude"`` ou ``"openai"`` para o chat
-            model. Os embeddings sempre usam Ollama.
+            model. Os embeddings rodam localmente via sentence-transformers,
+            sem dependência de serviço externo.
 
     Returns:
         Callable que recebe uma pergunta e devolve a resposta formatada.
@@ -73,7 +71,7 @@ def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(docs)
 
-    embeddings = OllamaEmbeddings(model=_EMBEDDING_MODEL)
+    embeddings = HuggingFaceEmbeddings(model_name=_EMBEDDING_MODEL)
     db = FAISS.from_documents(chunks, embeddings)
     retriever = db.as_retriever(search_kwargs={"k": 3})
 

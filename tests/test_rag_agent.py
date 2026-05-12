@@ -47,13 +47,13 @@ def test_create_rag_agent_invokes_chain(
 ) -> None:
     """A chain RAG completa roda com embeddings determinísticas e LLM mockado.
 
-    O teste injeta ``FakeEmbeddings`` no lugar de ``OllamaEmbeddings``,
+    O teste injeta ``FakeEmbeddings`` no lugar de ``HuggingFaceEmbeddings``,
     constrói o índice FAISS sobre os docs reais de ``data/docs/`` e
     verifica que a resposta final passou pelo ``format_response``.
     """
     import agents.rag_agent as rag_mod
 
-    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: fake_embeddings)
+    monkeypatch.setattr(rag_mod, "HuggingFaceEmbeddings", lambda model_name=None: fake_embeddings)
 
     fake_llm = patched_get_llm
     fake_llm.responses = ["A receita do Q3 foi de R$ 15.2 milhões."]
