@@ -211,7 +211,7 @@ def test_build_agents_map_returns_seven_entries(
     import agents.rag_agent as rag_mod
     from tests.fakes import FakeEmbeddings
 
-    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: FakeEmbeddings())
+    monkeypatch.setattr(rag_mod, "HuggingFaceEmbeddings", lambda model_name=None: FakeEmbeddings())
 
     from evals.evaluate import build_agents_map
 
@@ -256,11 +256,11 @@ def test_run_evals_writes_results_file(
     fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
     fake_results_path = tmp_path / "tiny_results.json"
 
-    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    # Patch HuggingFaceEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
     import agents.rag_agent as rag_mod
     from tests.fakes import FakeEmbeddings as _FakeEmb
 
-    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+    monkeypatch.setattr(rag_mod, "HuggingFaceEmbeddings", lambda model_name=None: _FakeEmb())
 
     monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
     monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
@@ -309,11 +309,11 @@ def test_run_evals_skips_unknown_agent(
     fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
     fake_results_path = tmp_path / "skip_results.json"
 
-    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    # Patch HuggingFaceEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
     import agents.rag_agent as rag_mod
     from tests.fakes import FakeEmbeddings as _FakeEmb
 
-    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+    monkeypatch.setattr(rag_mod, "HuggingFaceEmbeddings", lambda model_name=None: _FakeEmb())
 
     monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
     monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
@@ -344,11 +344,11 @@ def test_run_evals_handles_agent_exception(
     fake_dataset_path.write_text(_json.dumps(tiny_dataset), encoding="utf-8")
     fake_results_path = tmp_path / "boom_results.json"
 
-    # Patch OllamaEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
+    # Patch HuggingFaceEmbeddings — build_agents_map instancia rag_agent que precisa de embeddings.
     import agents.rag_agent as rag_mod
     from tests.fakes import FakeEmbeddings as _FakeEmb
 
-    monkeypatch.setattr(rag_mod, "OllamaEmbeddings", lambda model=None: _FakeEmb())
+    monkeypatch.setattr(rag_mod, "HuggingFaceEmbeddings", lambda model_name=None: _FakeEmb())
 
     monkeypatch.setattr(evals_mod, "DATASET_PATH", fake_dataset_path)
     monkeypatch.setattr(evals_mod, "RESULTS_PATH", fake_results_path)
