@@ -13,19 +13,21 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
-
-from langchain_community.document_loaders import TextLoader
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import CharacterTextSplitter
+from typing import TYPE_CHECKING, Any
 
 from agents.provider import Provider, callbacks_config, get_llm
 
+if TYPE_CHECKING:
+    from langchain_core.embeddings import Embeddings
+
 _EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+
+def _make_embeddings(model: str = _EMBEDDING_MODEL) -> Embeddings:
+    """Factory com import lazy — segura o torch fora do caminho de import do módulo."""
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    return HuggingFaceEmbeddings(model_name=model)
 
 
 def format_response(result: object) -> str:
@@ -40,15 +42,17 @@ def format_response(result: object) -> str:
     return short
 
 
-def _load_docs(docs_dir: str = "data/docs") -> list[Document]:
+def _load_docs(docs_dir: str = "data/docs") -> list[Any]:
     """Carrega todos os arquivos .txt do diretório informado.
 
     Raises:
         FileNotFoundError: Se o diretório não existir.
     """
+    from langchain_community.document_loaders import TextLoader
+
     if not os.path.isdir(docs_dir):
         raise FileNotFoundError(f"Diretório de documentos não encontrado: {docs_dir!r}")
-    docs: list[Document] = []
+    docs: list[Any] = []
     for fname in os.listdir(docs_dir):
         if fname.endswith(".txt"):
             loader = TextLoader(os.path.join(docs_dir, fname), encoding="utf-8")
@@ -67,11 +71,17 @@ def create_rag_agent(provider: Provider = "ollama") -> Callable[[str], str]:
     Returns:
         Callable que recebe uma pergunta e devolve a resposta formatada.
     """
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_core.runnables import RunnablePassthrough
+    from langchain_text_splitters import CharacterTextSplitter
+
     docs = _load_docs()
     splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(docs)
 
-    embeddings = HuggingFaceEmbeddings(model_name=_EMBEDDING_MODEL)
+    embeddings = _make_embeddings(_EMBEDDING_MODEL)
     db = FAISS.from_documents(chunks, embeddings)
     retriever = db.as_retriever(search_kwargs={"k": 3})
 
