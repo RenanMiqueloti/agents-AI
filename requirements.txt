@@ -18,7 +18,7 @@ langgraph>=1.1.10
 # Vetores locais (RAG agent) + embeddings via sentence-transformers
 faiss-cpu>=1.13.2
 langchain-huggingface>=0.3.0
-sentence-transformers>=3.0.0
+sentence-transformers>=5.5.0
 
 # MCP server — protocolo universal de integração de agentes (2026)
 mcp>=1.27.1
