@@ -32,7 +32,7 @@ uvicorn[standard]>=0.46.0
 
 # Variáveis de ambiente — pydantic-settings consolida env vars com validação
 python-dotenv>=1.2.2
-pydantic-settings>=2.0.0
+pydantic-settings>=2.14.1
 
 # Utilitários
 numpy>=1.26.0
