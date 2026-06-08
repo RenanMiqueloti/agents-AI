@@ -1,5 +1,5 @@
 # Interface web
-streamlit>=1.35.0
+streamlit>=1.58.0
 
 # LangChain — núcleo e integrações (v1.x usa langchain.agents.create_agent)
 langchain>=1.2.18
