@@ -21,7 +21,7 @@ langchain-huggingface>=1.2.2
 sentence-transformers>=5.5.1
 
 # MCP server — protocolo universal de integração de agentes (2026)
-mcp>=1.27.1
+mcp>=1.28.1
 
 # Observabilidade (opt-in via env vars LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY)
 langfuse>=3.0.0
